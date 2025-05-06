@@ -407,19 +407,19 @@ const AdminRestaurants = () => {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       
-      <div className="flex-1 p-8 bg-gray-50 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
+      <div className="flex-1 p-4 lg:p-8 w-full lg:ml-64">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Gerenciar Restaurantes</h1>
-            <p className="text-text">Adicione, edite ou remova restaurantes parceiros.</p>
+            <h1 className="text-xl lg:text-2xl font-bold mb-2">Gerenciar Restaurantes</h1>
+            <p className="text-text">Adicione, edite ou remova restaurantes do sistema.</p>
           </div>
           
           <Button 
             onClick={() => handleOpenForm()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full lg:w-auto"
           >
             <PlusCircle size={16} />
             Novo Restaurante

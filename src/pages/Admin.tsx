@@ -134,29 +134,29 @@ const Admin = () => {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       
-      <div className="flex-1 p-8 bg-gray-50 min-h-screen">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+      <div className="flex-1 p-4 lg:p-8 w-full lg:ml-64">
+        <div className="mb-6 lg:mb-8">
+          <h1 className="text-xl lg:text-2xl font-bold mb-2">Dashboard</h1>
           <p className="text-text">Bem-vindo ao painel administrativo do Gastro Pass.</p>
         </div>
         
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
+            <div key={index} className="bg-white p-4 lg:p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm text-text mb-1">{stat.title}</p>
-                  <h3 className="text-2xl font-bold">{stat.value}</h3>
+                  <h3 className="text-xl lg:text-2xl font-bold">{stat.value}</h3>
                 </div>
-                <div className="rounded-full bg-gray-100 p-3">
+                <div className="rounded-full bg-gray-100 p-2 lg:p-3">
                   {stat.icon}
                 </div>
               </div>
-              <div className="mt-4 flex items-center">
+              <div className="mt-3 lg:mt-4 flex items-center">
                 {stat.isPositive ? (
                   <ArrowUp size={16} className="text-green-500 mr-1" />
                 ) : (
@@ -172,52 +172,49 @@ const Admin = () => {
         </div>
         
         {/* Tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6 lg:space-y-8">
           {/* Recent Users */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b">
+            <div className="px-4 lg:px-6 py-4 border-b">
               <h3 className="font-semibold text-lg">Usuários Recentes</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       Nome
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       Data
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {recentUsers.length > 0 ? (
                     recentUsers.map((user) => (
                       <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-dark">{user.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                          <div className="text-sm text-text">{user.email}</div>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text-dark">{user.id}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {user.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
-                          {user.createdAt ? formatDate(user.createdAt) : 'N/A'}
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                          {formatDate(user.createdAt)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Ativo
-                          </span>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                          {user.status}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan={4} className="px-4 lg:px-6 py-4 text-center text-sm text-gray-500">
                         Nenhum usuário cadastrado.
                       </td>
                     </tr>
@@ -225,55 +222,55 @@ const Admin = () => {
                 </tbody>
               </table>
             </div>
-            <div className="px-6 py-3 border-t">
+            <div className="px-4 lg:px-6 py-3 border-t">
               <Link to="/admin/users" className="text-sm text-primary hover:underline">
                 Ver todos os usuários
               </Link>
             </div>
           </div>
-          
+
           {/* Recent Restaurants */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b">
+            <div className="px-4 lg:px-6 py-4 border-b">
               <h3 className="font-semibold text-lg">Restaurantes Recentes</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       Nome
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       Categoria
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
                       Localização
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {recentRestaurants.length > 0 ? (
                     recentRestaurants.map((restaurant) => (
                       <tr key={restaurant.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-dark">{restaurant.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text-dark">{restaurant.id}</td>
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {restaurant.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
                           {restaurant.category}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
                           {restaurant.location}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan={4} className="px-4 lg:px-6 py-4 text-center text-sm text-gray-500">
                         Nenhum restaurante cadastrado.
                       </td>
                     </tr>
@@ -281,7 +278,7 @@ const Admin = () => {
                 </tbody>
               </table>
             </div>
-            <div className="px-6 py-3 border-t">
+            <div className="px-4 lg:px-6 py-3 border-t">
               <Link to="/admin/restaurants" className="text-sm text-primary hover:underline">
                 Ver todos os restaurantes
               </Link>

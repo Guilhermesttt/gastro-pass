@@ -233,19 +233,19 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       
-      <div className="flex-1 p-8 bg-gray-50 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
+      <div className="flex-1 p-4 lg:p-8 w-full lg:ml-64">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Gerenciar Usuários</h1>
+            <h1 className="text-xl lg:text-2xl font-bold mb-2">Gerenciar Usuários</h1>
             <p className="text-text">Adicione, edite ou remova usuários do sistema.</p>
           </div>
           
           <Button 
             onClick={() => handleOpenForm()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full lg:w-auto"
           >
             <PlusCircle size={16} />
             Novo Usuário
@@ -255,47 +255,42 @@ const AdminUsers = () => {
         {/* Tabela de Usuários */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Data de Cadastro</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      Nenhum usuário cadastrado. Clique em "Novo Usuário" para adicionar.
-                    </TableCell>
-                  </TableRow>
-                ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Nome
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length > 0 ? (
                   users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.id}</TableCell>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.createdAt 
-                          ? new Date(user.createdAt).toLocaleDateString('pt-BR') 
-                          : 'N/A'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          user.isAdmin 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {user.isAdmin ? 'Admin' : 'Usuário'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text-dark">{user.id}</td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {user.name}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        {user.email}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        {user.isAdmin ? 'Administrador' : 'Usuário'}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -309,150 +304,147 @@ const AdminUsers = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenForm(user)}
-                            title="Editar usuário"
+                            className="flex items-center gap-1"
                           >
-                            <Pencil size={16} />
+                            <Pencil size={14} />
+                            <span className="hidden sm:inline">Editar</span>
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteClick(user)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Remover usuário"
+                            className="flex items-center gap-1"
                           >
-                            <Trash size={16} />
+                            <Trash size={14} />
+                            <span className="hidden sm:inline">Excluir</span>
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 lg:px-6 py-4 text-center text-sm text-gray-500">
+                      Nenhum usuário cadastrado.
+                    </td>
+                  </tr>
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         </div>
-        
-        {/* Diálogo de Adicionar/Editar Usuário */}
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>
-                {currentUser ? 'Editar Usuário' : 'Adicionar Novo Usuário'}
-              </DialogTitle>
-              <DialogDescription>
-                {currentUser 
-                  ? 'Modifique os detalhes do usuário e clique em salvar quando terminar.'
-                  : 'Preencha os detalhes do novo usuário. Todos os campos com * são obrigatórios.'
-                }
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
+      </div>
+
+      {/* Modal de Formulário */}
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">
+                {currentUser ? 'Editar Usuário' : 'Novo Usuário'}
+              </h2>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome Completo *
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome
                   </label>
-                  <Input
-                    id="name"
+                  <input
+                    type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Nome completo do usuário"
+                    className="w-full px-3 py-2 border rounded-md"
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email *
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
                   </label>
-                  <Input
-                    id="email"
-                    name="email"
+                  <input
                     type="email"
+                    name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="email@exemplo.com"
+                    className="w-full px-3 py-2 border rounded-md"
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Senha {!currentUser && '*'}
-                    {currentUser && <span className="text-xs text-gray-500 ml-1">(Deixe em branco para manter a mesma)</span>}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Senha
                   </label>
-                  <Input
-                    id="password"
-                    name="password"
+                  <input
                     type="password"
+                    name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder={currentUser ? '••••••' : 'Mínimo de 6 caracteres'}
+                    className="w-full px-3 py-2 border rounded-md"
                     required={!currentUser}
                   />
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center">
                   <input
-                    id="isAdmin"
-                    name="isAdmin"
                     type="checkbox"
+                    name="isAdmin"
                     checked={formData.isAdmin}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary"
+                    className="h-4 w-4 text-primary border-gray-300 rounded"
                   />
-                  <label htmlFor="isAdmin" className="text-sm font-medium text-gray-700">
-                    Este usuário é um administrador
+                  <label className="ml-2 block text-sm text-gray-700">
+                    Administrador
                   </label>
                 </div>
-              </div>
-              
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsFormOpen(false)}
+                
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsFormOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    {currentUser ? 'Salvar' : 'Criar'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {isDeleteDialogOpen && currentUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Confirmar Exclusão</h2>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja excluir o usuário {currentUser.name}? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeleteDialogOpen(false)}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {currentUser ? 'Salvar Alterações' : 'Adicionar Usuário'}
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDelete}
+                >
+                  Excluir
                 </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Diálogo de Confirmação de Exclusão */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Confirmar Exclusão</DialogTitle>
-              <DialogDescription>
-                Você tem certeza que deseja excluir o usuário <strong>{currentUser?.name}</strong>?
-                Esta ação não pode ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleConfirmDelete}
-              >
-                Excluir
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

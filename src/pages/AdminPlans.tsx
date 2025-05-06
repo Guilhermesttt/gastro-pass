@@ -28,7 +28,9 @@ import {
   XCircle,
   BellRing,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Trash2,
+  X
 } from 'lucide-react';
 
 interface Plan {
@@ -401,17 +403,17 @@ const AdminPlans = () => {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       
-      <div className="flex-1 p-8 bg-gray-50 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
+      <div className="flex-1 p-4 lg:p-8 w-full lg:ml-64">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Gerenciar Planos</h1>
+            <h1 className="text-xl lg:text-2xl font-bold mb-2">Gerenciar Planos</h1>
             <p className="text-text">Adicione, edite ou remova planos de assinatura.</p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
             <Button 
               onClick={runAutomatedProcesses}
               disabled={isProcessing}
@@ -441,7 +443,7 @@ const AdminPlans = () => {
         </div>
         
         {/* Status do processamento */}
-        {(isProcessing || processedUsers.length > 0) && (
+        {processStatus && (
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <h2 className="text-lg font-medium mb-2 flex items-center">
               <CheckCircle size={18} className="text-green-500 mr-2" />
@@ -462,241 +464,215 @@ const AdminPlans = () => {
         )}
         
         {/* Tabela de Planos */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Preço</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Recursos</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {plans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell className="font-medium">{plan.id}</TableCell>
-                    <TableCell>{plan.name}</TableCell>
-                    <TableCell>{formatCurrency(plan.price)}</TableCell>
-                    <TableCell>{plan.description}</TableCell>
-                    <TableCell>
-                      <div className="max-h-16 overflow-y-auto">
-                        <ul className="list-disc list-inside text-sm">
-                          {plan.features.map((feature, index) => (
-                            <li key={index}>{feature}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenForm(plan)}
-                        >
-                          <Pencil size={16} />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteClick(plan)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash size={16} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-        
-        {/* Modelos de Email */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-medium">Modelos de Email</h2>
-            <p className="text-sm text-gray-500">Emails enviados automaticamente aos clientes.</p>
-          </div>
-          
-          <div className="p-4 space-y-4">
-            <div className="border rounded-md p-4">
-              <h3 className="font-medium mb-2">1. Pagamento Confirmado</h3>
-              <div className="bg-gray-50 p-3 rounded text-sm">
-                <p><strong>Assunto:</strong> Pagamento Confirmado</p>
-                <p className="mt-2"><strong>Corpo:</strong></p>
-                <div className="mt-1 pl-4 border-l-2 border-gray-300">
-                  Olá, [NOME_DO_CLIENTE]!<br/>
-                  Recebemos o seu pagamento. Seu plano está ativo e você já pode aproveitar os benefícios exclusivos nos restaurantes parceiros.<br/>
-                  Aproveite!
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-md p-4">
-              <h3 className="font-medium mb-2">2. Aviso de Vencimento (3 dias antes)</h3>
-              <div className="bg-gray-50 p-3 rounded text-sm">
-                <p><strong>Assunto:</strong> Seu plano está quase acabando</p>
-                <p className="mt-2"><strong>Corpo:</strong></p>
-                <div className="mt-1 pl-4 border-l-2 border-gray-300">
-                  Olá, [NOME_DO_CLIENTE]!<br/>
-                  Seu plano atual está prestes a expirar. Renove agora para continuar aproveitando os benefícios dos nossos restaurantes parceiros.<br/>
-                  Clique aqui para renovar: [LINK_PARA_RENOVAR]
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-md p-4">
-              <h3 className="font-medium mb-2">3. Plano Expirado</h3>
-              <div className="bg-gray-50 p-3 rounded text-sm">
-                <p><strong>Assunto:</strong> Seu plano expirou</p>
-                <p className="mt-2"><strong>Corpo:</strong></p>
-                <div className="mt-1 pl-4 border-l-2 border-gray-300">
-                  Olá, [NOME_DO_CLIENTE].<br/>
-                  Seu plano expirou e você perdeu o acesso aos benefícios.<br/>
-                  Para reativar, clique aqui: [LINK_PARA_REATIVAR]
-                </div>
-              </div>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Nome
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Preço
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Descrição
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {plans.length > 0 ? (
+                  plans.map((plan) => (
+                    <tr key={plan.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text-dark">{plan.id}</td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {plan.name}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        R$ {plan.price.toFixed(2)}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 text-sm text-text">
+                        {plan.description}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenForm(plan)}
+                            className="flex items-center gap-1"
+                          >
+                            <Pencil size={14} />
+                            <span className="hidden sm:inline">Editar</span>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteClick(plan)}
+                            className="flex items-center gap-1"
+                          >
+                            <Trash2 size={14} />
+                            <span className="hidden sm:inline">Excluir</span>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 lg:px-6 py-4 text-center text-sm text-gray-500">
+                      Nenhum plano cadastrado.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-        
-        {/* Formulário para adicionar/editar plano */}
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{currentPlan ? 'Editar Plano' : 'Adicionar Novo Plano'}</DialogTitle>
-              <DialogDescription>
-                {currentPlan ? 'Edite as informações do plano abaixo.' : 'Preencha os detalhes do novo plano.'}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">Nome do Plano*</label>
-                  <Input
-                    id="name"
+      </div>
+
+      {/* Modal de Formulário */}
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">
+                {currentPlan ? 'Editar Plano' : 'Novo Plano'}
+              </h2>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Ex: Básico, Premium, etc."
+                    className="w-full px-3 py-2 border rounded-md"
                     required
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <label htmlFor="price" className="text-sm font-medium">Preço (R$)*</label>
-                  <Input
-                    id="price"
-                    name="price"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Preço
+                  </label>
+                  <input
                     type="number"
-                    step="0.01"
-                    min="0"
+                    name="price"
                     value={formData.price}
                     onChange={handleInputChange}
-                    placeholder="Ex: 19.90"
+                    step="0.01"
+                    min="0"
+                    className="w-full px-3 py-2 border rounded-md"
                     required
                   />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">Descrição*</label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Descreva o plano brevemente..."
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Recursos*</label>
-                <p className="text-xs text-gray-500">Adicione os recursos incluídos neste plano</p>
                 
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      value={feature}
-                      onChange={(e) => handleFeatureChange(index, e.target.value)}
-                      placeholder="Ex: Acesso a todos os restaurantes"
-                    />
-                    {formData.features.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeFeatureField(index)}
-                      >
-                        <XCircle size={16} />
-                      </Button>
-                    )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descrição
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    rows={3}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recursos
+                  </label>
+                  <div className="space-y-2">
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => handleFeatureChange(index, e.target.value)}
+                          className="flex-1 px-3 py-2 border rounded-md"
+                          placeholder="Recurso do plano"
+                          required
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeFeatureField(index)}
+                          className="shrink-0"
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addFeatureField}
+                      className="w-full"
+                    >
+                      Adicionar Recurso
+                    </Button>
                   </div>
-                ))}
+                </div>
                 
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsFormOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    {currentPlan ? 'Salvar' : 'Criar'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {isDeleteDialogOpen && currentPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Confirmar Exclusão</h2>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja excluir o plano {currentPlan.name}? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-end gap-2">
                 <Button
-                  type="button"
                   variant="outline"
-                  size="sm"
-                  onClick={addFeatureField}
-                  className="mt-2"
+                  onClick={() => setIsDeleteDialogOpen(false)}
                 >
-                  Adicionar Recurso
-                </Button>
-              </div>
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">Salvar Plano</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Dialog de confirmação para excluir */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Remover Plano</DialogTitle>
-              <DialogDescription>
-                Tem certeza que deseja remover este plano? Esta ação não pode ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {currentPlan && (
-              <div className="bg-gray-50 p-4 rounded-md space-y-2 my-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Nome:</span>
-                  <span className="font-medium">{currentPlan.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Preço:</span>
-                  <span className="font-medium">{formatCurrency(currentPlan.price || 0)}</span>
-                </div>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDelete}
+                >
+                  Excluir
+                </Button>
               </div>
-            )}
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button variant="destructive" onClick={handleConfirmDelete}>
-                Remover
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

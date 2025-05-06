@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import AdminSidebar from '@/components/AdminSidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,31 +19,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Check, XCircle, ExternalLink, FileCheck } from 'lucide-react';
+import { Check, XCircle, ExternalLink, FileCheck, X } from 'lucide-react';
+import { formatDate } from '@/utils/formatDate';
+import { Payment } from '@/types';
 
-interface Payment {
-  id: string;
-  userId: string;
-  userName?: string;
-  userEmail?: string;
-  date: string;
-  description: string;
-  amount: number;
-  status: 'pendente' | 'pago' | 'cancelado';
-  planId: string;
-  planName?: string;
-}
-
-const AdminPayments = () => {
+export function AdminPayments() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'pago' | 'cancelado'>('todos');
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
 
   useEffect(() => {
     // Check if user is logged in as admin
@@ -66,120 +55,70 @@ const AdminPayments = () => {
       return;
     }
     
-    // Load payments from localStorage
-    loadPayments();
+    // Simular carregamento de pagamentos
+    const mockPayments: Payment[] = [];
+
+    setPayments(mockPayments);
+    updateFilteredPayments(mockPayments, statusFilter);
   }, [navigate]);
 
-  const loadPayments = () => {
-    const storedPayments = localStorage.getItem('payments');
-    const storedUsers = localStorage.getItem('users');
-    
-    if (storedPayments && storedUsers) {
-      try {
-        const payments = JSON.parse(storedPayments);
-        const users = JSON.parse(storedUsers);
-        
-        // Enrich payment data with user info
-        const enrichedPayments = payments.map((payment: Payment) => {
-          const user = users.find((u: any) => u.id === payment.userId);
-          
-          // Get plan name
-          let planName = '';
-          if (payment.planId === 'basic') planName = 'Básico';
-          else if (payment.planId === 'premium') planName = 'Premium';
-          else if (payment.planId === 'family') planName = 'Família';
-          
-          return {
-            ...payment,
-            userName: user ? user.name : 'Usuário desconhecido',
-            userEmail: user ? user.email : '-',
-            planName
-          };
-        });
-        
-        setPayments(enrichedPayments);
-        updateFilteredPayments(enrichedPayments, statusFilter);
-      } catch (error) {
-        console.error('Erro ao carregar pagamentos:', error);
-      }
-    }
-  };
-
-  const updateFilteredPayments = (payments: Payment[], status: string) => {
+  const updateFilteredPayments = (payments: Payment[], status: 'todos' | 'pendente' | 'pago' | 'cancelado') => {
     if (status === 'todos') {
       setFilteredPayments(payments);
     } else {
-      setFilteredPayments(payments.filter(p => p.status === status));
+      setFilteredPayments(payments.filter(payment => payment.status === status));
     }
   };
 
-  const handleStatusFilterChange = (status: string) => {
+  const handleStatusFilterChange = (status: 'todos' | 'pendente' | 'pago' | 'cancelado') => {
     setStatusFilter(status);
     updateFilteredPayments(payments, status);
   };
 
-  const handleApproveClick = (payment: Payment) => {
+  const handleApprovePayment = (payment: Payment) => {
     setCurrentPayment(payment);
     setIsApproveDialogOpen(true);
   };
 
-  const handleRejectClick = (payment: Payment) => {
+  const handleRejectPayment = (payment: Payment) => {
     setCurrentPayment(payment);
     setIsRejectDialogOpen(true);
   };
 
   const handleConfirmApprove = () => {
-    if (!currentPayment) return;
-    
-    // Update payment status
-    const updatedPayments = payments.map(payment => {
-      if (payment.id === currentPayment.id) {
-        return { ...payment, status: 'pago' };
-      }
-      return payment;
-    });
-    
-    // Save to localStorage
-    localStorage.setItem('payments', JSON.stringify(updatedPayments));
-    
-    // Update state
-    setPayments(updatedPayments);
-    updateFilteredPayments(updatedPayments, statusFilter);
-    
-    // Close dialog
-    setIsApproveDialogOpen(false);
-    
-    toast({
-      title: 'Pagamento aprovado',
-      description: `O pagamento de ${currentPayment.userName} foi aprovado com sucesso.`,
-    });
+    if (currentPayment) {
+      let updatedPayments = payments.map(payment => 
+        payment.id === currentPayment.id 
+          ? { ...payment, status: 'pago' as const }
+          : payment
+      );
+      setPayments(updatedPayments);
+      updateFilteredPayments(updatedPayments, statusFilter);
+      setIsApproveDialogOpen(false);
+      
+      toast({
+        title: 'Pagamento aprovado',
+        description: `O pagamento de ${currentPayment.userName} foi aprovado com sucesso.`
+      });
+    }
   };
 
   const handleConfirmReject = () => {
-    if (!currentPayment) return;
-    
-    // Update payment status
-    const updatedPayments = payments.map(payment => {
-      if (payment.id === currentPayment.id) {
-        return { ...payment, status: 'cancelado' };
-      }
-      return payment;
-    });
-    
-    // Save to localStorage
-    localStorage.setItem('payments', JSON.stringify(updatedPayments));
-    
-    // Update state
-    setPayments(updatedPayments);
-    updateFilteredPayments(updatedPayments, statusFilter);
-    
-    // Close dialog
-    setIsRejectDialogOpen(false);
-    
-    toast({
-      title: 'Pagamento rejeitado',
-      description: `O pagamento de ${currentPayment.userName} foi rejeitado.`,
-    });
+    if (currentPayment) {
+      let updatedPayments = payments.map(payment => 
+        payment.id === currentPayment.id 
+          ? { ...payment, status: 'cancelado' as const }
+          : payment
+      );
+      setPayments(updatedPayments);
+      updateFilteredPayments(updatedPayments, statusFilter);
+      setIsRejectDialogOpen(false);
+      
+      toast({
+        title: 'Pagamento rejeitado',
+        description: `O pagamento de ${currentPayment.userName} foi rejeitado.`
+      });
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -191,216 +130,201 @@ const AdminPayments = () => {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
       
-      <div className="flex-1 p-8 bg-gray-50 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
+      <div className="flex-1 p-4 lg:p-8 w-full lg:ml-64">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Gerenciar Pagamentos</h1>
+            <h1 className="text-xl lg:text-2xl font-bold mb-2">Gerenciar Pagamentos</h1>
             <p className="text-text">Aprove ou rejeite solicitações de pagamento dos usuários.</p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full lg:w-auto">
             <Button 
               variant={statusFilter === 'todos' ? 'default' : 'outline'}
               onClick={() => handleStatusFilterChange('todos')}
+              className="flex-1 lg:flex-none"
             >
               Todos
             </Button>
             <Button 
               variant={statusFilter === 'pendente' ? 'default' : 'outline'}
               onClick={() => handleStatusFilterChange('pendente')}
+              className="flex-1 lg:flex-none"
             >
               Pendentes
             </Button>
             <Button 
               variant={statusFilter === 'pago' ? 'default' : 'outline'}
               onClick={() => handleStatusFilterChange('pago')}
+              className="flex-1 lg:flex-none"
             >
               Aprovados
             </Button>
             <Button 
               variant={statusFilter === 'cancelado' ? 'default' : 'outline'}
               onClick={() => handleStatusFilterChange('cancelado')}
+              className="flex-1 lg:flex-none"
             >
               Rejeitados
             </Button>
           </div>
         </div>
         
-        {/* Table */}
+        {/* Tabela de Pagamentos */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Usuário
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Valor
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Data
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {filteredPayments.length > 0 ? (
                   filteredPayments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell className="font-medium">{payment.id.substring(0, 8)}...</TableCell>
-                      <TableCell>{payment.date}</TableCell>
-                      <TableCell>{payment.userName}</TableCell>
-                      <TableCell>{payment.userEmail}</TableCell>
-                      <TableCell>{payment.planName}</TableCell>
-                      <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text-dark">{payment.id}</td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {payment.userName}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        R$ {payment.amount.toFixed(2)}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        {formatDate(payment.date)}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           payment.status === 'pago' 
-                            ? 'bg-green-100 text-green-800' 
+                            ? 'bg-green-100 text-green-800'
                             : payment.status === 'pendente'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
                           {payment.status === 'pago' 
-                            ? 'Aprovado' 
+                            ? 'Aprovado'
                             : payment.status === 'pendente'
-                              ? 'Pendente'
-                              : 'Rejeitado'}
+                            ? 'Pendente'
+                            : 'Rejeitado'
+                          }
                         </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-text">
+                        <div className="flex gap-2">
                           {payment.status === 'pendente' && (
                             <>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleApproveClick(payment)}
-                                className="text-green-500 hover:text-green-700"
+                                onClick={() => handleApprovePayment(payment)}
+                                className="flex items-center gap-1"
                               >
-                                <Check size={16} className="mr-1" />
-                                Aprovar
+                                <Check size={14} />
+                                <span className="hidden sm:inline">Aprovar</span>
                               </Button>
                               <Button
-                                variant="outline"
+                                variant="destructive"
                                 size="sm"
-                                onClick={() => handleRejectClick(payment)}
-                                className="text-red-500 hover:text-red-700"
+                                onClick={() => handleRejectPayment(payment)}
+                                className="flex items-center gap-1"
                               >
-                                <XCircle size={16} className="mr-1" />
-                                Rejeitar
+                                <X size={14} />
+                                <span className="hidden sm:inline">Rejeitar</span>
                               </Button>
                             </>
                           )}
-                          {payment.status !== 'pendente' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled
-                              className="opacity-50"
-                            >
-                              <FileCheck size={16} className="mr-1" />
-                              Processado
-                            </Button>
-                          )}
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-4 text-gray-500">
-                      Nenhum pagamento {statusFilter !== 'todos' ? statusFilter : ''} encontrado.
-                    </TableCell>
-                  </TableRow>
+                  <tr>
+                    <td colSpan={6} className="px-4 lg:px-6 py-4 text-center text-sm text-gray-500">
+                      Nenhum pagamento encontrado.
+                    </td>
+                  </tr>
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         </div>
-        
-        {/* Approve Dialog */}
-        <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Aprovar pagamento</DialogTitle>
-              <DialogDescription>
-                Tem certeza que deseja aprovar este pagamento?
-              </DialogDescription>
-            </DialogHeader>
-            {currentPayment && (
-              <div className="bg-gray-50 p-4 rounded-md space-y-2 my-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Usuário:</span>
-                  <span className="font-medium">{currentPayment.userName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Plano:</span>
-                  <span className="font-medium">{currentPayment.planName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Valor:</span>
-                  <span className="font-medium">{formatCurrency(currentPayment.amount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Data:</span>
-                  <span className="font-medium">{currentPayment.date}</span>
-                </div>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleConfirmApprove} className="bg-green-600 hover:bg-green-700">
-                <Check size={16} className="mr-2" />
-                Confirmar aprovação
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Reject Dialog */}
-        <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Rejeitar pagamento</DialogTitle>
-              <DialogDescription>
-                Tem certeza que deseja rejeitar este pagamento?
-              </DialogDescription>
-            </DialogHeader>
-            {currentPayment && (
-              <div className="bg-gray-50 p-4 rounded-md space-y-2 my-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Usuário:</span>
-                  <span className="font-medium">{currentPayment.userName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Plano:</span>
-                  <span className="font-medium">{currentPayment.planName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Valor:</span>
-                  <span className="font-medium">{formatCurrency(currentPayment.amount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Data:</span>
-                  <span className="font-medium">{currentPayment.date}</span>
-                </div>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Cancelar</Button>
-              <Button variant="destructive" onClick={handleConfirmReject}>
-                <XCircle size={16} className="mr-2" />
-                Confirmar rejeição
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Modal de Confirmação de Aprovação */}
+      {isApproveDialogOpen && currentPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Confirmar Aprovação</h2>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja aprovar o pagamento de {currentPayment.userName} no valor de R$ {currentPayment.amount.toFixed(2)}?
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsApproveDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleConfirmApprove}
+                >
+                  Aprovar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Rejeição */}
+      {isRejectDialogOpen && currentPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Confirmar Rejeição</h2>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja rejeitar o pagamento de {currentPayment.userName} no valor de R$ {currentPayment.amount.toFixed(2)}?
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsRejectDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmReject}
+                >
+                  Rejeitar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}
 
 export default AdminPayments; 

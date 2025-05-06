@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
@@ -9,7 +9,9 @@ import {
   ChevronLeft,
   LogOut,
   CreditCard,
-  Package
+  Package,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -37,8 +39,26 @@ const NavItem = ({ icon, label, to, isActive, isCollapsed }: NavItemProps) => (
 
 const AdminSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const activePath = location.pathname;
+
+  // Fechar menu mobile ao mudar de rota
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  // Fechar menu mobile ao redimensionar para desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const navItems = [
     {
@@ -74,61 +94,81 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <div 
-      className={cn(
-        "bg-white shadow-md h-screen transition-all duration-300 relative",
-        isCollapsed ? "w-16" : "w-64"
-      )}
-    >
-      <div className="flex items-center p-4 border-b">
-        {!isCollapsed && (
-          <h1 className="font-bold text-xl text-primary">Admin</h1>
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Sidebar */}
+      <div 
+        className={cn(
+          "bg-white shadow-md h-screen transition-all duration-300 fixed lg:relative z-40",
+          isCollapsed ? "w-16" : "w-64",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "rounded-full p-2 hover:bg-gray-100 transition-colors",
-            isCollapsed ? "ml-auto" : "ml-auto"
+      >
+        <div className="flex items-center p-4 border-b">
+          {!isCollapsed && (
+            <h1 className="font-bold text-xl text-primary">Admin</h1>
           )}
-        >
-          <ChevronLeft 
-            size={20} 
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
-              "transition-transform",
-              isCollapsed ? "rotate-180" : ""
-            )} 
-          />
-        </button>
-      </div>
-      
-      <div className="py-6 px-3 flex flex-col h-[calc(100%-64px)] justify-between">
-        <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
-            <NavItem
-              key={item.to}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
-              isActive={activePath === item.to}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </nav>
-        
-        <div>
-          <Link
-            to="/login"
-            onClick={() => localStorage.removeItem('user')}
-            className={cn(
-              "flex items-center gap-3 px-3 py-3 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              "rounded-full p-2 hover:bg-gray-100 transition-colors hidden lg:block",
+              isCollapsed ? "ml-auto" : "ml-auto"
             )}
           >
-            <LogOut size={20} />
-            {!isCollapsed && <span>Sair</span>}
-          </Link>
+            <ChevronLeft 
+              size={20} 
+              className={cn(
+                "transition-transform",
+                isCollapsed ? "rotate-180" : ""
+              )} 
+            />
+          </button>
+        </div>
+        
+        <div className="py-6 px-3 flex flex-col h-[calc(100%-64px)] justify-between">
+          <nav className="flex flex-col gap-1">
+            {navItems.map((item) => (
+              <NavItem
+                key={item.to}
+                icon={item.icon}
+                label={item.label}
+                to={item.to}
+                isActive={activePath === item.to}
+                isCollapsed={isCollapsed}
+              />
+            ))}
+          </nav>
+          
+          <div>
+            <Link
+              to="/login"
+              onClick={() => localStorage.removeItem('user')}
+              className={cn(
+                "flex items-center gap-3 px-3 py-3 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              )}
+            >
+              <LogOut size={20} />
+              {!isCollapsed && <span>Sair</span>}
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Overlay para mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+    </>
   );
 };
 
