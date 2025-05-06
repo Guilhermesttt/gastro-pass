@@ -1,73 +1,54 @@
-# Welcome to your Lovable project
+# 🍽️ Gastro Pass
 
-## Project info
+**Gastro Pass** é um clube de benefícios gastronômicos para todo o Brasil. Através da plataforma web, usuários descobrem restaurantes parceiros com **ofertas exclusivas** e uma experiência visual moderna e responsiva.
 
-**URL**: https://lovable.dev/projects/1a6f3268-dac3-464a-a09e-5bd167a66df1
+---
 
-## How can I edit this code?
+## 📌 Sobre
 
-There are several ways of editing your application.
+Gastro Pass tem como missão conectar amantes da boa comida com estabelecimentos de qualidade em todo o país. Com uma interface rápida construída em **Vite + TypeScript + Tailwind CSS**, o projeto oferece:
 
-**Use Lovable**
+- Cadastro de restaurantes com imagem  
+- Página principal com listagem filtrável  
+- Painel administrativo para gestão de cadastros  
+- Visual elegante e responsivo com animações e UX suave  
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1a6f3268-dac3-464a-a09e-5bd167a66df1) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Tecnologias Utilizadas
 
-**Use your preferred IDE**
+- **Vite** — build tool moderna e rápida  
+- **TypeScript (TSX)** — tipagem segura no React  
+- **Tailwind CSS** — estilização utilitária  
+- **PostCSS** — processamento de CSS  
+- **Node.js** — ambiente de execução  
+- **Vite.config.ts** — configuração do projeto  
+- **ESLint** — padrão de código limpo
+- 
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🔗 Acesse o Projeto
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Você pode acessar o **Gastro Pass** online clicando no link abaixo:
 
-Follow these steps:
+🌐 [https://gastro-pass.vercel.app](https://gastro-pass.vercel.ap)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 💡 Funcionalidades
 
-# Step 3: Install the necessary dependencies.
-npm i
+- 🔍 Filtro por cidade, estado e nome  
+- 🖼️ Upload de imagem para cada restaurante  
+- ⚙️ Painel de administração  
+- 💬 Modal de envio e feedback  
+- 🎨 Interface animada com AOS.js (caso usado)  
+- 📱 Responsivo para mobile e desktop  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## 👨‍💻 Desenvolvedor
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1a6f3268-dac3-464a-a09e-5bd167a66df1) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Guilherme [Seu Sobrenome]**  
+📧 [guilherme@email.com](mailto:dev.guilhermesantana@gmail.com)  
+🔗 [LinkedIn](https://www.linkedin.com/in/guilherme-lima-de-sant-ana-b243aa359/)  
+📂 [Portfólio](https://guilhermesttt.github.io/Portfolio/#?fbclid=PAZXh0bgNhZW0CMTEAAaffczXmDkhk0GbXcqQ_Og2pSfihIpwW4DT-Z9sksgOcUkNC7mx5DvU3ZS0brQ_aem_I5YrWcmsZbZ3ucWikaX-vg)
