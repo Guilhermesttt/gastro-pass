@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -37,7 +37,8 @@ const NavItem = ({ icon, label, to, isActive, isCollapsed }: NavItemProps) => (
 
 const AdminSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const activePath = window.location.pathname;
+  const location = useLocation();
+  const activePath = location.pathname;
 
   const navItems = [
     {

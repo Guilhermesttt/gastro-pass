@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -5,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import RestaurantCard from '@/components/RestaurantCard';
 import Footer from '@/components/Footer';
 import { Dialog } from '@/components/ui/dialog';
-import { Search, MapPin, Bell, Star } from 'lucide-react';
+import { Search, MapPin, Star } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
 
 // Use the Restaurant interface from mockData.ts
@@ -22,6 +23,7 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
 
   // Categories for filter
   const categories = [
@@ -46,10 +48,20 @@ const Dashboard = () => {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Load restaurants
-      const allRestaurants = getMockRestaurants();
-      setRestaurants(allRestaurants);
-      setFilteredRestaurants(allRestaurants);
+      // Load restaurants from localStorage if available
+      const storedRestaurants = localStorage.getItem('restaurants');
+      if (storedRestaurants) {
+        const parsedRestaurants = JSON.parse(storedRestaurants);
+        setRestaurants(parsedRestaurants);
+        setFilteredRestaurants(parsedRestaurants);
+      } else {
+        // Fallback to mock data if no stored restaurants
+        const allRestaurants = getMockRestaurants();
+        setRestaurants(allRestaurants);
+        setFilteredRestaurants(allRestaurants);
+        // Store the mock data in localStorage for future use
+        localStorage.setItem('restaurants', JSON.stringify(allRestaurants));
+      }
 
       // Welcome toast
       toast({
@@ -62,7 +74,16 @@ const Dashboard = () => {
     }
   }, [navigate, toast]);
 
-  // Filter restaurants when search or category changes
+  // Extract unique locations for the filter
+  const locations = [
+    { value: 'all', label: 'Todos os Bairros' },
+    ...Array.from(new Set(restaurants.map(r => r.location))).map(location => ({
+      value: location,
+      label: location
+    }))
+  ];
+
+  // Filter restaurants when search, category or location changes
   useEffect(() => {
     let filtered = [...restaurants];
     
@@ -83,8 +104,15 @@ const Dashboard = () => {
       );
     }
     
+    // Filter by location
+    if (selectedLocation !== 'all') {
+      filtered = filtered.filter((restaurant) =>
+        restaurant.location === selectedLocation
+      );
+    }
+    
     setFilteredRestaurants(filtered);
-  }, [searchQuery, selectedCategory, restaurants]);
+  }, [searchQuery, selectedCategory, selectedLocation, restaurants]);
 
   // Debounce search input
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +155,7 @@ const Dashboard = () => {
                 />
               </div>
               
-              <div className="flex-shrink-0">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -136,6 +164,18 @@ const Dashboard = () => {
                   {categories.map((category) => (
                     <option key={category.value} value={category.value}>
                       {category.label}
+                    </option>
+                  ))}
+                </select>
+                
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {locations.map((location) => (
+                    <option key={location.value} value={location.value}>
+                      {location.label}
                     </option>
                   ))}
                 </select>
@@ -154,6 +194,7 @@ const Dashboard = () => {
                   image={restaurant.image}
                   category={restaurant.category}
                   location={restaurant.location}
+                  address={restaurant.address}
                   rating={restaurant.rating}
                   discount={restaurant.discount}
                   onClick={() => handleRestaurantClick(restaurant)}

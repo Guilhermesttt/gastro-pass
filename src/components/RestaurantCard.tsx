@@ -1,5 +1,5 @@
 
-import { Star } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 
 interface RestaurantCardProps {
   id: string;
@@ -9,6 +9,7 @@ interface RestaurantCardProps {
   location: string;
   rating: number;
   discount: string;
+  address?: string;
   onClick: () => void;
 }
 
@@ -18,6 +19,7 @@ const RestaurantCard = ({
   image,
   category,
   location,
+  address,
   rating,
   discount,
   onClick,
@@ -49,7 +51,10 @@ const RestaurantCard = ({
         
         <div className="text-sm text-text">
           <p className="mb-1">{category}</p>
-          <p>{location}</p>
+          <div className="flex items-center gap-1">
+            <MapPin size={14} className="text-gray-500" />
+            <p>{address || location}</p>
+          </div>
         </div>
       </div>
     </div>
