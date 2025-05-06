@@ -23,7 +23,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-sm fixed w-full z-50">
+    <nav className="bg-card shadow-sm fixed w-full z-50 border-b border-border/20">
       <div className="container-custom py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center">
@@ -37,7 +37,7 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className="text-text-dark hover:text-primary transition-colors duration-200"
+                  className="text-foreground hover:text-primary transition-colors duration-200"
                 >
                   {item.name}
                 </Link>
@@ -46,21 +46,29 @@ const Navbar = () => {
 
             <div className="flex items-center space-x-4">
               {isLoggedIn ? (
-                <Link
-                  to="/dashboard"
-                  className="flex items-center text-primary hover:text-blue-700 transition-colors duration-200"
-                >
-                  <User size={20} className="mr-1" />
-                  <span>Minha Conta</span>
-                </Link>
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center text-primary hover:text-primary/80 transition-colors duration-200"
+                  >
+                    <User size={20} className="mr-1" />
+                    <span>Minha Conta</span>
+                  </Link>
+                  <Link
+                    to="/admin"
+                    className="px-4 py-2 rounded-md bg-secondary text-foreground hover:bg-secondary/80 transition-all duration-200"
+                  >
+                    Admin
+                  </Link>
+                </>
               ) : (
                 <>
-                  <Link to="/login" className="text-text-dark hover:text-primary transition-colors duration-200">
+                  <Link to="/login" className="text-foreground hover:text-primary transition-colors duration-200">
                     Entrar
                   </Link>
                   <Link
                     to="/register"
-                    className="btn btn-primary"
+                    className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-all duration-200"
                   >
                     Cadastre-se
                   </Link>
@@ -73,7 +81,7 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleMenu}
-              className="p-2 rounded-md text-text-dark hover:text-primary focus:outline-none"
+              className="p-2 rounded-md text-foreground hover:text-primary focus:outline-none"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -83,7 +91,7 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         <div
           className={cn(
-            "md:hidden fixed inset-0 bg-white z-40 pt-16 transition-transform duration-300 ease-in-out",
+            "md:hidden fixed inset-0 bg-card z-40 pt-16 transition-transform duration-300 ease-in-out",
             isOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -93,7 +101,7 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className="text-lg font-medium text-text-dark hover:text-primary"
+                  className="text-lg font-medium text-foreground hover:text-primary"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -102,14 +110,23 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col space-y-4 mt-auto">
               {isLoggedIn ? (
-                <Link
-                  to="/dashboard"
-                  className="btn btn-primary w-full flex justify-center items-center"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <User size={20} className="mr-2" />
-                  Minha Conta
-                </Link>
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="btn btn-primary w-full flex justify-center items-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <User size={20} className="mr-2" />
+                    Minha Conta
+                  </Link>
+                  <Link
+                    to="/admin"
+                    className="btn bg-secondary text-foreground w-full flex justify-center items-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link
