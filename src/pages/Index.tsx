@@ -5,7 +5,7 @@ import Hero from '@/components/Hero';
 import BenefitCard from '@/components/BenefitCard';
 import Timeline from '@/components/Timeline';
 import Footer from '@/components/Footer';
-import { utensils, discount, gift, star } from 'lucide-react';
+import { Utensils, Gift, Star } from 'lucide-react';
 
 const Index = () => {
   // Scroll to section if hash is present in URL
@@ -23,17 +23,17 @@ const Index = () => {
 
   const benefits = [
     {
-      icon: <discount className="w-8 h-8" />,
+      icon: <Utensils className="w-8 h-8" />,
       title: 'Descontos Exclusivos',
       description: 'Economize até 25% em restaurantes selecionados com nossos descontos exclusivos para membros.'
     },
     {
-      icon: <gift className="w-8 h-8" />,
+      icon: <Gift className="w-8 h-8" />,
       title: 'Benefícios Especiais',
       description: 'Acesso a menus degustação, bebidas cortesia e sobremesas gratuitas nos melhores estabelecimentos.'
     },
     {
-      icon: <star className="w-8 h-8" />,
+      icon: <Star className="w-8 h-8" />,
       title: 'Experiências Premium',
       description: 'Participe de eventos gastronômicos exclusivos e conheça chefs renomados em experiências únicas.'
     }
@@ -141,7 +141,7 @@ const Index = () => {
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-lg">{restaurant.name}</h3>
                     <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-sm">
-                      <star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                      <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                       <span className="font-medium">{restaurant.rating.toFixed(1)}</span>
                     </div>
                   </div>

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -7,21 +6,10 @@ import RestaurantCard from '@/components/RestaurantCard';
 import Footer from '@/components/Footer';
 import { Dialog } from '@/components/ui/dialog';
 import { Search, MapPin, Bell, Star } from 'lucide-react';
-import { getMockRestaurants } from '@/data/mockData';
+import { getMockRestaurants, Restaurant } from '@/data/mockData';
 
-interface Restaurant {
-  id: string;
-  name: string;
-  image: string;
-  category: string;
-  location: string;
-  rating: number;
-  discount: string;
-  description: string;
-  address: string;
-  phone: string;
-  hours: string;
-}
+// Use the Restaurant interface from mockData.ts
+// Removing the local Restaurant interface since we're importing it
 
 const Dashboard = () => {
   const navigate = useNavigate();
