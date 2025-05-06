@@ -1,5 +1,4 @@
-
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -9,17 +8,42 @@ const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [location, setLocation] = useState('');
+  const [availableLocations, setAvailableLocations] = useState<{value: string, label: string}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
+    location?: string;
     general?: string;
   }>({});
 
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Carrega as localidades disponíveis dos restaurantes cadastrados
+  useEffect(() => {
+    const storedRestaurants = localStorage.getItem('restaurants');
+    if (storedRestaurants) {
+      try {
+        const restaurants = JSON.parse(storedRestaurants);
+        // Extrai localidades únicas dos restaurantes
+        const uniqueLocations = Array.from(new Set(restaurants.map((r: any) => r.location)))
+          .filter(Boolean)
+          .map(location => ({
+            value: location as string,
+            label: location as string
+          }));
+        
+        setAvailableLocations(uniqueLocations);
+      } catch (error) {
+        console.error('Erro ao carregar localidades:', error);
+        setAvailableLocations([]);
+      }
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors: {
@@ -27,6 +51,7 @@ const RegisterForm = () => {
       email?: string;
       password?: string;
       confirmPassword?: string;
+      location?: string;
     } = {};
 
     // Name validation
@@ -62,56 +87,64 @@ const RegisterForm = () => {
       newErrors.confirmPassword = 'As senhas não conferem';
     }
 
+    // Location validation
+    if (!location) {
+      newErrors.location = 'Selecione sua localidade';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       return;
     }
-
+    
     setIsSubmitting(true);
-
+    
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get existing users from localStorage or initialize empty array
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-
-      // Create new user object
+      
+      // Create a new user
       const newUser = {
         id: Date.now().toString(),
         name,
         email,
         password,
+        location,
         createdAt: new Date().toISOString(),
+        isAdmin: false,
       };
-
-      // Add new user to array and save back to localStorage
+      
+      // Add to localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
       users.push(newUser);
       localStorage.setItem('users', JSON.stringify(users));
-
-      // Set current user in localStorage (auto login)
+      
+      // Store logged in user
       localStorage.setItem('user', JSON.stringify({
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
+        location: newUser.location,
+        createdAt: newUser.createdAt,
+        isAdmin: false,
       }));
-
+      
       toast({
         title: 'Cadastro realizado com sucesso!',
-        description: 'Bem-vindo(a) ao RestoBenefícios!',
+        description: 'Bem-vindo ao Gastro Pass!',
       });
-
+      
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (error) {
       setErrors({
-        general: 'Ocorreu um erro ao criar sua conta. Tente novamente.',
+        general: 'Ocorreu um erro ao realizar o cadastro. Tente novamente.',
       });
     } finally {
       setIsSubmitting(false);
@@ -119,7 +152,7 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="card max-w-lg w-full mx-auto">
+    <div className="mt-40 p-6 w-full">
       <h2 className="text-2xl font-bold mb-6 text-center">Criar Conta</h2>
       
       {errors.general && (
@@ -164,6 +197,43 @@ const RegisterForm = () => {
           />
           {errors.email && (
             <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="location" className="block text-sm font-medium text-text-dark mb-1">
+            Localidade
+          </label>
+          <select
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+              errors.location ? 'border-red-500' : 'border-gray-300'
+            }`}
+          >
+            <option value="">Selecione sua região</option>
+            {availableLocations.length > 0 ? (
+              availableLocations.map((loc) => (
+                <option key={loc.value} value={loc.value}>
+                  {loc.label}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="Centro">Centro</option>
+                <option value="Vila Mariana">Vila Mariana</option>
+                <option value="Pinheiros">Pinheiros</option>
+                <option value="Jardins">Jardins</option>
+                <option value="Itaim">Itaim</option>
+                <option value="Moema">Moema</option>
+                <option value="Perdizes">Perdizes</option>
+                <option value="Santana">Santana</option>
+              </>
+            )}
+          </select>
+          {errors.location && (
+            <p className="text-red-500 text-xs mt-1">{errors.location}</p>
           )}
         </div>
 

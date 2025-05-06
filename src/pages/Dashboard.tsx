@@ -1,13 +1,16 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import RestaurantCard from '@/components/RestaurantCard';
 import Footer from '@/components/Footer';
+import UserAccountSection from '@/components/UserAccountSection';
 import { Dialog } from '@/components/ui/dialog';
-import { Search, MapPin, Star } from 'lucide-react';
+import { Search, MapPin, Star, User, Store, Info, AlertTriangle } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
+import { cn } from '@/lib/utils';
+import { useBenefit, getUserBenefits } from '@/lib/userBenefits';
+import { Link } from 'react-router-dom';
 
 // Use the Restaurant interface from mockData.ts
 // Removing the local Restaurant interface since we're importing it
@@ -16,7 +19,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [user, setUser] = useState<{name: string, email: string} | null>(null);
+  const [user, setUser] = useState<{name: string, email: string, location?: string} | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
@@ -24,6 +27,10 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'account'>('restaurants');
+  const [noRestaurantsInArea, setNoRestaurantsInArea] = useState(false);
+  const [noRestaurants, setNoRestaurants] = useState(false);
+  const [benefits, setBenefits] = useState(getUserBenefits());
 
   // Categories for filter
   const categories = [
@@ -52,15 +59,43 @@ const Dashboard = () => {
       const storedRestaurants = localStorage.getItem('restaurants');
       if (storedRestaurants) {
         const parsedRestaurants = JSON.parse(storedRestaurants);
+        
+        if (parsedRestaurants.length === 0) {
+          setNoRestaurants(true);
+          setRestaurants([]);
+          setFilteredRestaurants([]);
+          return;
+        }
+        
         setRestaurants(parsedRestaurants);
-        setFilteredRestaurants(parsedRestaurants);
+        
+        // Se o usuário tiver localidade definida, filtra por padrão
+        if (parsedUser.location) {
+          setSelectedLocation(parsedUser.location);
+          
+          // Verifica se existem restaurantes na localidade do usuário
+          const restaurantsInUserLocation = parsedRestaurants.filter(
+            (r: Restaurant) => r.location === parsedUser.location
+          );
+          
+          if (restaurantsInUserLocation.length === 0) {
+            setNoRestaurantsInArea(true);
+            setFilteredRestaurants(parsedRestaurants); // Mostra todos se não tiver na área
+            toast({
+              title: 'Sem restaurantes na sua área',
+              description: 'Não encontramos restaurantes na sua região. Mostrando todas as opções.',
+            });
+          } else {
+            setFilteredRestaurants(restaurantsInUserLocation);
+          }
+        } else {
+          setFilteredRestaurants(parsedRestaurants);
+        }
       } else {
-        // Fallback to mock data if no stored restaurants
-        const allRestaurants = getMockRestaurants();
-        setRestaurants(allRestaurants);
-        setFilteredRestaurants(allRestaurants);
-        // Store the mock data in localStorage for future use
-        localStorage.setItem('restaurants', JSON.stringify(allRestaurants));
+        // Não há restaurantes cadastrados
+        setNoRestaurants(true);
+        setRestaurants([]);
+        setFilteredRestaurants([]);
       }
 
       // Welcome toast
@@ -129,6 +164,29 @@ const Dashboard = () => {
     setSelectedRestaurant(null);
   };
 
+  const handleBenefitRedemption = (restaurant: any) => {
+    const result = useBenefit();
+    setBenefits(getUserBenefits()); // Atualiza o estado dos benefícios
+    
+    if (result.success) {
+      toast({
+        title: 'Benefício resgatado!',
+        description: result.message,
+      });
+      handleCloseModal();
+    } else {
+      toast({
+        title: 'Benefícios esgotados',
+        description: result.message,
+        variant: 'destructive',
+      });
+      // Redireciona para a página de planos após 2 segundos
+      setTimeout(() => {
+        navigate('/plans');
+      }, 2000);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -138,73 +196,154 @@ const Dashboard = () => {
           {/* User welcome section */}
           <div className="mb-10">
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Olá, {user?.name}!</h1>
-            <p className="text-text">Descubra os restaurantes parceiros e seus benefícios exclusivos.</p>
+            <p className="text-foreground-light flex items-center">
+              Bem-vindo ao seu espaço exclusivo no Gastro Pass.
+              {user?.location && (
+                <span className="ml-2 flex items-center text-primary">
+                  <MapPin size={16} className="mr-1" />
+                  {user.location}
+                </span>
+              )}
+            </p>
           </div>
           
-          {/* Filters and search */}
-          <div className="bg-white shadow-sm rounded-lg p-4 mb-8">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Buscar restaurantes..."
-                  className="pl-10 pr-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {categories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-                
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {locations.map((location) => (
-                    <option key={location.value} value={location.value}>
-                      {location.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          {/* Tabs */}
+          <div className="flex border-b border-border mb-8">
+            <button
+              onClick={() => setActiveTab('restaurants')}
+              className={cn(
+                "flex items-center px-6 py-3 font-medium transition-colors",
+                activeTab === 'restaurants'
+                  ? "text-primary border-b-2 border-primary -mb-px"
+                  : "text-foreground-light hover:text-primary"
+              )}
+            >
+              <Store className="w-5 h-5 mr-2" />
+              Restaurantes
+            </button>
+            <button
+              onClick={() => setActiveTab('account')}
+              className={cn(
+                "flex items-center px-6 py-3 font-medium transition-colors",
+                activeTab === 'account'
+                  ? "text-primary border-b-2 border-primary -mb-px"
+                  : "text-foreground-light hover:text-primary"
+              )}
+            >
+              <User className="w-5 h-5 mr-2" />
+              Minha Conta
+            </button>
           </div>
           
-          {/* Restaurant grid */}
-          {filteredRestaurants.length > 0 ? (
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredRestaurants.map((restaurant) => (
-                <RestaurantCard
-                  key={restaurant.id}
-                  id={restaurant.id}
-                  name={restaurant.name}
-                  image={restaurant.image}
-                  category={restaurant.category}
-                  location={restaurant.location}
-                  address={restaurant.address}
-                  rating={restaurant.rating}
-                  discount={restaurant.discount}
-                  onClick={() => handleRestaurantClick(restaurant)}
-                />
-              ))}
-            </div>
+          {activeTab === 'account' ? (
+            <UserAccountSection />
           ) : (
-            <div className="text-center py-16">
-              <p className="text-lg text-text">Nenhum restaurante encontrado. Tente outra busca.</p>
-            </div>
+            <>
+              {/* Aviso de localidade */}
+              {user?.location && !noRestaurants && (
+                <div className={cn(
+                  "mb-4 p-3 rounded-lg flex items-start gap-3",
+                  noRestaurantsInArea ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"
+                )}>
+                  <Info size={20} className={noRestaurantsInArea ? "text-yellow-600 mt-0.5" : "text-green-600 mt-0.5"} />
+                  <div>
+                    {noRestaurantsInArea ? (
+                      <>
+                        <p className="text-yellow-800 font-medium">Sem restaurantes na sua região</p>
+                        <p className="text-yellow-700 text-sm">Não encontramos restaurantes em {user.location}. Mostrando todas as opções disponíveis.</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-green-800 font-medium">Restaurantes na sua região</p>
+                        <p className="text-green-700 text-sm">Mostrando restaurantes em {user.location}. Use os filtros para ver mais opções.</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Alerta quando não há restaurantes */}
+              {noRestaurants && (
+                <div className="mb-8 p-6 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-4">
+                  <AlertTriangle size={24} className="text-yellow-600 mt-0.5" />
+                  <div>
+                    <p className="text-yellow-800 font-medium text-lg">Não há restaurantes cadastrados</p>
+                    <p className="text-yellow-700 mt-2">
+                      No momento, não há restaurantes cadastrados no sistema. 
+                      Por favor, entre em contato com o administrador para mais informações.
+                    </p>
+                  </div>
+                </div>
+              )}
+            
+              {/* Filters and search */}
+              {!noRestaurants && (
+                <div className="bg-white shadow-sm rounded-lg p-4 mb-8">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="relative flex-grow">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Buscar restaurantes..."
+                        className="pl-10 pr-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        {categories.map((category) => (
+                          <option key={category.value} value={category.value}>
+                            {category.label}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      <select
+                        value={selectedLocation}
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                        className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        {locations.map((location) => (
+                          <option key={location.value} value={location.value}>
+                            {location.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Restaurant grid */}
+              {!noRestaurants && filteredRestaurants.length > 0 ? (
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {filteredRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      id={restaurant.id}
+                      name={restaurant.name}
+                      image={restaurant.image}
+                      category={restaurant.category}
+                      location={restaurant.location}
+                      address={restaurant.address}
+                      rating={restaurant.rating}
+                      discount={restaurant.discount}
+                      onClick={() => handleRestaurantClick(restaurant)}
+                    />
+                  ))}
+                </div>
+              ) : !noRestaurants ? (
+                <div className="text-center py-16">
+                  <p className="text-lg text-foreground-light">Nenhum restaurante encontrado. Tente outra busca.</p>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       </main>
@@ -247,53 +386,49 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-
+              
               <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold">{selectedRestaurant.name}</h2>
-                  <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
-                    <Star size={18} className="fill-yellow-500 text-yellow-500" />
-                    <span className="font-medium">{selectedRestaurant.rating.toFixed(1)}</span>
+                <h3 className="text-2xl font-bold mb-2">{selectedRestaurant.name}</h3>
+                
+                <div className="flex items-center text-sm mb-4">
+                  <span className="flex items-center mr-4">
+                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                    {selectedRestaurant.rating}
+                  </span>
+                  <span className="mr-4">{selectedRestaurant.category}</span>
+                </div>
+                
+                <div className="flex items-start mb-4">
+                  <MapPin className="w-5 h-5 text-primary mr-2 mt-0.5" />
+                  <div>
+                    <p className="font-medium">{selectedRestaurant.location}</p>
+                    {selectedRestaurant.address && (
+                      <p className="text-foreground-light">{selectedRestaurant.address}</p>
+                    )}
                   </div>
                 </div>
-
-                <p className="text-sm text-text mb-6">{selectedRestaurant.category}</p>
-
-                <div className="flex items-start gap-2 mb-4 text-text">
-                  <MapPin size={18} className="mt-1 flex-shrink-0" />
-                  <p>{selectedRestaurant.address || selectedRestaurant.location}</p>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="font-semibold mb-2">Descrição</h3>
-                  <p className="text-text">
-                    {selectedRestaurant.description || 
-                      "Este restaurante parceiro oferece benefícios exclusivos para membros do RestoBenefícios. Apresente seu cartão virtual no aplicativo para obter descontos e vantagens especiais."}
+                
+                {selectedRestaurant.description && (
+                  <div className="mb-6">
+                    <h4 className="font-medium mb-2">Sobre o restaurante</h4>
+                    <p className="text-foreground-light">
+                      {selectedRestaurant.description || "Experimente os pratos especiais deste restaurante e aproveite nosso desconto exclusivo para membros."}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="bg-background p-4 rounded-lg mb-6">
+                  <h4 className="font-medium mb-2">Benefício exclusivo</h4>
+                  <p className="text-lg font-semibold text-primary">
+                    {selectedRestaurant.discount}
+                  </p>
+                  <p className="text-sm text-foreground-light">
+                    Válido para todos os dias mediante apresentação do app.
                   </p>
                 </div>
-
-                <div className="mb-6">
-                  <h3 className="font-semibold mb-2">Detalhes</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-text-light">Telefone</p>
-                      <p>{selectedRestaurant.phone || "(11) 3456-7890"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-light">Horário</p>
-                      <p>{selectedRestaurant.hours || "12h às 23h"}</p>
-                    </div>
-                  </div>
-                </div>
-
+                
                 <button
-                  onClick={() => {
-                    toast({
-                      title: 'Benefício resgatado!',
-                      description: `Você resgatou o benefício de ${selectedRestaurant.discount} no ${selectedRestaurant.name}`,
-                    });
-                    handleCloseModal();
-                  }}
+                  onClick={() => handleBenefitRedemption(selectedRestaurant)}
                   className="btn btn-primary w-full"
                 >
                   Resgatar Benefício

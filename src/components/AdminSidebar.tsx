@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -6,10 +5,11 @@ import {
   LayoutDashboard, 
   Utensils, 
   Users, 
-  Settings, 
   BarChart, 
   ChevronLeft,
-  LogOut 
+  LogOut,
+  CreditCard,
+  Package
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -57,14 +57,19 @@ const AdminSidebar = () => {
       to: '/admin/users'
     },
     {
+      icon: <CreditCard size={20} />,
+      label: 'Pagamentos',
+      to: '/admin/payments'
+    },
+    {
+      icon: <Package size={20} />,
+      label: 'Planos',
+      to: '/admin/plans'
+    },
+    {
       icon: <BarChart size={20} />,
       label: 'Relatórios',
       to: '/admin/reports'
-    },
-    {
-      icon: <Settings size={20} />,
-      label: 'Configurações',
-      to: '/admin/settings'
     }
   ];
 

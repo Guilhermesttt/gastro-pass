@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
@@ -6,6 +5,8 @@ import BenefitCard from '@/components/BenefitCard';
 import Timeline from '@/components/Timeline';
 import Footer from '@/components/Footer';
 import { Utensils, Gift, Star } from 'lucide-react';
+import useScrollAnimation from '@/hooks/useScrollAnimation';
+import { cn } from '@/lib/utils';
 
 const Index = () => {
   // Scroll to section if hash is present in URL
@@ -69,6 +70,15 @@ const Index = () => {
     }
   ];
 
+  const animationOptions = { triggerOnce: true, threshold: 0.1 };
+  const cardAnimationOptions = { triggerOnce: true, threshold: 0.2 };
+
+  // Hero já tem sua própria animação de entrada
+  const benefitsSectionAnim = useScrollAnimation(animationOptions);
+  const howItWorksAnim = useScrollAnimation(animationOptions);
+  const restaurantsAnim = useScrollAnimation(animationOptions);
+  const ctaAnim = useScrollAnimation(animationOptions);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -77,34 +87,50 @@ const Index = () => {
       <Hero />
       
       {/* Benefits Section */}
-      <section id="benefits" className="section bg-white">
+      <section 
+        id="benefits" 
+        ref={benefitsSectionAnim.ref} 
+        className={cn("section animate-on-scroll fade-in-up", { 'is-visible': benefitsSectionAnim.isVisible })}
+      >
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2>Benefícios Exclusivos</h2>
-            <p className="max-w-2xl mx-auto text-lg">
+          <div className={cn("text-center mb-12 animate-on-scroll fade-in-up", { 'is-visible': benefitsSectionAnim.isVisible })}>
+            <h2 className="text-primary-dark">Benefícios Exclusivos</h2>
+            <p className="max-w-2xl mx-auto text-lg text-foreground">
               Nossos membros têm acesso a vantagens especiais em restaurantes selecionados.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {benefits.map((benefit, index) => (
-              <BenefitCard
-                key={index}
-                icon={benefit.icon}
-                title={benefit.title}
-                description={benefit.description}
-              />
-            ))}
+            {benefits.map((benefit, index) => {
+              const cardAnim = useScrollAnimation(cardAnimationOptions);
+              return (
+                <div 
+                  key={index} 
+                  ref={cardAnim.ref} 
+                  className={cn("animate-on-scroll fade-in-up", { 'is-visible': cardAnim.isVisible }, `delay-${index * 100}`)}
+                >
+                  <BenefitCard
+                    icon={benefit.icon}
+                    title={benefit.title}
+                    description={benefit.description}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
       
       {/* How it Works Section */}
-      <section id="how-it-works" className="section bg-gray-50">
+      <section 
+        id="how-it-works" 
+        ref={howItWorksAnim.ref} 
+        className={cn("section bg-background-secondary animate-on-scroll fade-in-up", { 'is-visible': howItWorksAnim.isVisible })}
+      >
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2>Como Funciona</h2>
-            <p className="max-w-2xl mx-auto text-lg">
+          <div className={cn("text-center mb-12 animate-on-scroll fade-in-up", { 'is-visible': howItWorksAnim.isVisible })}>
+            <h2 className="text-primary-dark">Como Funciona</h2>
+            <p className="max-w-2xl mx-auto text-lg text-foreground">
               Começar a aproveitar os benefícios é simples e rápido.
             </p>
           </div>
@@ -114,48 +140,59 @@ const Index = () => {
       </section>
       
       {/* Restaurant Partners Section */}
-      <section id="restaurants" className="section bg-white">
+      <section 
+        id="restaurants" 
+        ref={restaurantsAnim.ref} 
+        className={cn("section animate-on-scroll fade-in-up", { 'is-visible': restaurantsAnim.isVisible })}
+      >
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2>Restaurantes Parceiros</h2>
-            <p className="max-w-2xl mx-auto text-lg">
+          <div className={cn("text-center mb-12 animate-on-scroll fade-in-up", { 'is-visible': restaurantsAnim.isVisible })}>
+            <h2 className="text-primary-dark">Restaurantes Parceiros</h2>
+            <p className="max-w-2xl mx-auto text-lg text-foreground">
               Conheça alguns dos restaurantes parceiros que oferecem benefícios exclusivos.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {restaurantPartners.map((restaurant) => (
-              <div key={restaurant.id} className="card group cursor-pointer overflow-hidden">
-                <div className="relative mb-4 overflow-hidden rounded-lg">
-                  <div className="absolute top-0 right-0 bg-secondary text-black font-medium px-3 py-1 z-10 rounded-bl-lg">
-                    {restaurant.discount}
-                  </div>
-                  <img
-                    src={restaurant.image}
-                    alt={restaurant.name}
-                    className="w-full h-48 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-lg">{restaurant.name}</h3>
-                    <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-sm">
-                      <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                      <span className="font-medium">{restaurant.rating.toFixed(1)}</span>
+            {restaurantPartners.map((restaurant, index) => {
+              const cardAnim = useScrollAnimation(cardAnimationOptions);
+              return (
+                <div 
+                  key={restaurant.id} 
+                  ref={cardAnim.ref} 
+                  className={cn("card group cursor-pointer animate-on-scroll fade-in-up", { 'is-visible': cardAnim.isVisible }, `delay-${index * 100}`)}
+                >
+                  <div className="relative mb-4 overflow-hidden rounded-lg shadow-md">
+                    <div className="absolute top-0 right-0 bg-primary text-white font-medium px-3 py-1 z-10 rounded-bl-lg">
+                      {restaurant.discount}
                     </div>
+                    <img
+                      src={restaurant.image}
+                      alt={restaurant.name}
+                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
                   </div>
                   
-                  <div className="text-sm text-text">
-                    <p className="mb-1">{restaurant.category}</p>
-                    <p>{restaurant.location}</p>
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-lg text-primary-dark">{restaurant.name}</h3>
+                      <div className="flex items-center gap-1 bg-secondary/20 px-2 py-1 rounded text-sm">
+                        <Star className="w-4 h-4 fill-primary text-primary" />
+                        <span className="font-medium">{restaurant.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-foreground">
+                      <p className="mb-1">{restaurant.category}</p>
+                      <p>{restaurant.location}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
-          <div className="mt-12 text-center">
+          <div className={cn("mt-12 text-center animate-on-scroll fade-in-up", { 'is-visible': restaurantsAnim.isVisible }, "delay-300")}>
             <a href="/register" className="btn btn-primary">
               Ver Todos os Restaurantes
             </a>
@@ -164,14 +201,17 @@ const Index = () => {
       </section>
       
       {/* CTA Section */}
-      <section className="py-16 bg-primary text-white">
+      <section 
+        ref={ctaAnim.ref} 
+        className={cn("py-16 bg-primary text-white animate-on-scroll fade-in", { 'is-visible': ctaAnim.isVisible })}
+      >
         <div className="container-custom">
-          <div className="text-center">
+          <div className={cn("text-center md:max-w-2xl lg:max-w-3xl mx-auto px-4 animate-on-scroll fade-in", { 'is-visible': ctaAnim.isVisible }, "delay-200")}>
             <h2 className="text-white mb-4">Pronto para começar?</h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">
+            <p className="text-lg mb-8 text-white">
               Junte-se a milhares de pessoas que já estão economizando e aproveitando experiências gastronômicas exclusivas.
             </p>
-            <a href="/register" className="btn bg-white text-primary hover:bg-gray-100">
+            <a href="/register" className="btn bg-white text-primary hover:bg-gray-100 shadow-md border border-white/30">
               Criar Conta Gratuita
             </a>
           </div>

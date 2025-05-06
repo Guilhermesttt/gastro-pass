@@ -1,17 +1,61 @@
-
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('user') !== null;
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+    if (!isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  };
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (path === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsOpen(false);
+      document.body.style.overflow = '';
+      return;
+    }
+
+    if (path.startsWith('/') && path.includes('#')) {
+      e.preventDefault();
+      if (location.pathname !== '/') {
+        navigate(path);
+        setIsOpen(false);
+        document.body.style.overflow = '';
+        return;
+      }
+      const targetId = path.substring(path.indexOf('#'));
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        const navbarElement = document.querySelector('nav');
+        const navbarHeight = navbarElement ? navbarElement.offsetHeight : 0;
+        const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - navbarHeight;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+        setIsOpen(false);
+        document.body.style.overflow = '';
+      } else {
+        console.warn(`Element with id ${targetId} not found for smooth scroll.`);
+      }
+      return;
+    }
+    setIsOpen(false);
+    document.body.style.overflow = '';
   };
 
   const navItems = [
@@ -22,12 +66,50 @@ const Navbar = () => {
     { name: 'Contato', path: '/#contact' },
   ];
 
+  useEffect(() => {
+    // Verificar se o usuário está logado e se é admin
+    const checkUserAuth = () => {
+      const userString = localStorage.getItem('user');
+      if (userString) {
+        try {
+          const user = JSON.parse(userString);
+          setIsLoggedIn(true);
+          setIsAdmin(user.isAdmin === true);
+        } catch (error) {
+          console.error('Erro ao verificar autenticação:', error);
+          setIsLoggedIn(false);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+      }
+    };
+
+    checkUserAuth();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setIsOpen(false);
+    document.body.style.overflow = '';
+  }, [location.pathname]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
-    <nav className="bg-card shadow-sm fixed w-full z-50 border-b border-border/20">
+    <nav className="bg-card/90 backdrop-blur-md shadow-custom fixed w-full z-50 border-b border-border/30">
       <div className="container-custom py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center">
-            <span className="text-primary font-bold text-2xl">RestoBenefícios</span>
+            <img 
+              src="/img/gastro pass branco.png" 
+              alt="Gastro Pass Logo" 
+              className="h-40 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -37,7 +119,8 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className="text-foreground hover:text-primary transition-colors duration-200"
+                  onClick={(e) => handleSmoothScroll(e, item.path)}
+                  className="text-foreground hover:text-primary font-medium transition-colors duration-200"
                 >
                   {item.name}
                 </Link>
@@ -49,26 +132,31 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/dashboard"
-                    className="flex items-center text-primary hover:text-primary/80 transition-colors duration-200"
+                    className="flex items-center text-primary hover:text-primary-dark transition-colors duration-200 font-medium"
                   >
                     <User size={20} className="mr-1" />
                     <span>Minha Conta</span>
                   </Link>
-                  <Link
-                    to="/admin"
-                    className="px-4 py-2 rounded-md bg-secondary text-foreground hover:bg-secondary/80 transition-all duration-200"
-                  >
-                    Admin
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="btn btn-secondary"
+                    >
+                      Admin
+                    </Link>
+                  )}
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="text-foreground hover:text-primary transition-colors duration-200">
+                  <Link 
+                    to="/login" 
+                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                  >
                     Entrar
                   </Link>
                   <Link
                     to="/register"
-                    className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-all duration-200"
+                    className="btn btn-primary"
                   >
                     Cadastre-se
                   </Link>
@@ -78,10 +166,12 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center z-50">
             <button
               onClick={toggleMenu}
-              className="p-2 rounded-md text-foreground hover:text-primary focus:outline-none"
+              className="p-2 rounded-custom text-foreground hover:text-primary focus:outline-none"
+              aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={isOpen}
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -89,65 +179,66 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div
-          className={cn(
-            "md:hidden fixed inset-0 bg-card z-40 pt-16 transition-transform duration-300 ease-in-out",
-            isOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          <div className="flex flex-col h-full p-6">
-            <div className="flex flex-col space-y-6 mb-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className="text-lg font-medium text-foreground hover:text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-col space-y-4 mt-auto">
-              {isLoggedIn ? (
-                <>
+        {isOpen && (
+          <div
+            className="md:hidden fixed inset-0 top-16 left-0 right-0 bottom-0 bg-card/95 backdrop-blur-md z-30 border-t border-border/30 overflow-y-auto h-[calc(100vh-4rem)]"
+          >
+            <div className="flex flex-col h-full p-6">
+              <div className="flex flex-col space-y-6 mb-8">
+                {navItems.map((item) => (
                   <Link
-                    to="/dashboard"
-                    className="btn btn-primary w-full flex justify-center items-center"
-                    onClick={() => setIsOpen(false)}
+                    key={item.name}
+                    to={item.path}
+                    onClick={(e) => handleSmoothScroll(e, item.path)}
+                    className="text-lg font-medium text-foreground hover:text-primary transition-colors block py-2"
                   >
-                    <User size={20} className="mr-2" />
-                    Minha Conta
+                    {item.name}
                   </Link>
-                  <Link
-                    to="/admin"
-                    className="btn bg-secondary text-foreground w-full flex justify-center items-center"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Admin
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="btn btn-outline w-full text-center"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Entrar
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="btn btn-primary w-full text-center"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Cadastre-se
-                  </Link>
-                </>
-              )}
+                ))}
+              </div>
+              <div className="flex flex-col space-y-4 mt-auto pb-6">
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="btn btn-primary w-full flex justify-center items-center"
+                      onClick={(e) => handleSmoothScroll(e, '/dashboard')}
+                    >
+                      <User size={20} className="mr-2" />
+                      Minha Conta
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="btn btn-secondary w-full flex justify-center items-center"
+                        onClick={(e) => handleSmoothScroll(e, '/admin')}
+                      >
+                        Admin
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="btn btn-outline w-full text-center"
+                      onClick={(e) => handleSmoothScroll(e, '/login')}
+                    >
+                      Entrar
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="btn btn-primary w-full text-center"
+                      onClick={(e) => handleSmoothScroll(e, '/register')}
+                    >
+                      Cadastre-se
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </nav>
   );

@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -20,9 +19,11 @@ const Register = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow flex items-center py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <RegisterForm />
+      <main className="flex-grow flex items-center justify-center pt-28 pb-20 bg-gray-50">
+        <div className="container max-w-lg mx-auto px-4">
+          <div className="bg-white shadow-md rounded-lg overflow-hidden my-8">
+            <RegisterForm />
+          </div>
         </div>
       </main>
       

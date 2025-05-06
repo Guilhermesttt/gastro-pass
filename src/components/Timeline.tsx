@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 
 interface TimelineStep {
@@ -35,7 +34,7 @@ const Timeline = () => {
     <div className="py-12">
       <div className="relative">
         {/* Timeline line */}
-        <div className="hidden md:block absolute left-0 right-0 h-1 bg-gray-200 top-24"></div>
+        <div className="hidden md:block absolute left-0 right-0 h-2 bg-secondary/30 top-24"></div>
         
         {/* Timeline points */}
         <div className="grid md:grid-cols-4 gap-8">
@@ -46,16 +45,16 @@ const Timeline = () => {
             )}>
               {/* Number circle */}
               <div className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mb-4 md:mb-8 z-10",
-                "bg-primary shadow-lg"
+                "w-14 h-14 rounded-custom flex items-center justify-center text-white font-bold mb-4 md:mb-8 z-10",
+                "bg-primary shadow-custom-lg border-2 border-primary-dark"
               )}>
                 {step.id}
               </div>
               
               {/* Content */}
               <div className="card w-full">
-                <h4 className="text-lg font-semibold mb-2">{step.title}</h4>
-                <p className="text-sm text-text">{step.description}</p>
+                <h4 className="text-lg font-semibold mb-2 text-primary-dark">{step.title}</h4>
+                <p className="text-sm text-foreground-light">{step.description}</p>
               </div>
             </div>
           ))}
