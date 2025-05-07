@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -26,14 +28,25 @@ const NavItem = ({ icon, label, to, isActive, isCollapsed }: NavItemProps) => (
   <Link
     to={to}
     className={cn(
-      "flex items-center gap-3 px-3 py-3 rounded-md transition-colors",
+      "flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300",
       isActive 
         ? "bg-primary text-white" 
-        : "text-gray-700 hover:bg-gray-100"
+        : "text-gray-700 hover:bg-gray-100 hover:text-primary"
     )}
   >
     {icon}
-    {!isCollapsed && <span>{label}</span>}
+    <AnimatePresence>
+      {!isCollapsed && (
+        <motion.span
+          initial={{ opacity: 0, width: 0 }}
+          animate={{ opacity: 1, width: 'auto' }}
+          exit={{ opacity: 0, width: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {label}
+        </motion.span>
+      )}
+    </AnimatePresence>
   </Link>
 );
 
@@ -96,40 +109,54 @@ const AdminSidebar = () => {
   return (
     <>
       {/* Mobile Menu Button */}
-      <button
+      <motion.button
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md"
       >
         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      </motion.button>
 
       {/* Sidebar */}
-      <div 
+      <motion.div 
+        animate={{
+          width: isCollapsed ? 80 : 256,
+          transition: { duration: 0.3, ease: "easeInOut" }
+        }}
         className={cn(
           "bg-white shadow-md h-screen transition-all duration-300 fixed lg:relative z-40",
-          isCollapsed ? "w-16" : "w-64",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex items-center p-4 border-b">
-          {!isCollapsed && (
-            <h1 className="font-bold text-xl text-primary">Admin</h1>
-          )}
-          <button
+          <AnimatePresence>
+            {!isCollapsed && (
+              <motion.h1 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="font-bold text-xl text-primary"
+              >
+                Admin
+              </motion.h1>
+            )}
+          </AnimatePresence>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
               "rounded-full p-2 hover:bg-gray-100 transition-colors hidden lg:block",
               isCollapsed ? "ml-auto" : "ml-auto"
             )}
           >
-            <ChevronLeft 
-              size={20} 
-              className={cn(
-                "transition-transform",
-                isCollapsed ? "rotate-180" : ""
-              )} 
-            />
-          </button>
+            <motion.div
+              animate={{ rotate: isCollapsed ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronLeft size={20} />
+            </motion.div>
+          </motion.button>
         </div>
         
         <div className="py-6 px-3 flex flex-col h-[calc(100%-64px)] justify-between">
@@ -155,19 +182,36 @@ const AdminSidebar = () => {
               )}
             >
               <LogOut size={20} />
-              {!isCollapsed && <span>Sair</span>}
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    Sair
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Link>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Overlay para mobile */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

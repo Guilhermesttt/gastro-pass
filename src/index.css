@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -173,6 +174,23 @@
   .component-highlight {
     @apply border-2 border-primary/70 shadow-custom;
   }
+  
+  /* Novos estilos para links e botões */
+  .link-underline {
+    @apply relative inline-block;
+  }
+  
+  .link-underline:after {
+    @apply content-[''] absolute w-full scale-x-0 h-0.5 bottom-0 left-0 bg-primary origin-bottom-right transition-transform duration-300;
+  }
+  
+  .link-underline:hover:after {
+    @apply scale-x-100 origin-bottom-left;
+  }
+  
+  .pulse {
+    @apply animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite];
+  }
 }
 
 /* Classes adicionais para melhorar a visibilidade de elementos */
@@ -230,5 +248,25 @@ input, select, textarea {
   .delay-300.is-visible { transition-delay: 0.3s; }
   .delay-400.is-visible { transition-delay: 0.4s; }
   .delay-500.is-visible { transition-delay: 0.5s; }
+  
+  /* Novas animações */
+  .hover-scale {
+    @apply transition-transform duration-300;
+  }
+  
+  .hover-scale:hover {
+    @apply scale-105;
+  }
+  
+  .hover-rotate {
+    @apply transition-transform duration-300;
+  }
+  
+  .hover-rotate:hover {
+    @apply rotate-3;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
 }
-
