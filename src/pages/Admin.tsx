@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   createdAt?: string;
+  status?: string; // Add this line
 }
 
 interface Restaurant {
