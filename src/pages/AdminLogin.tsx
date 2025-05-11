@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldAlert } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Credenciais de administrador
 const ADMIN_EMAIL = 'admin@gastropass.com';
@@ -21,6 +22,7 @@ const AdminLogin = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const validateForm = () => {
     const newErrors: {
@@ -92,9 +94,9 @@ const AdminLogin = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow flex items-center justify-center pt-28 pb-20 bg-gray-50">
+      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-36' : 'pt-28'} pb-20 bg-gray-50`}>
         <div className="container max-w-md mx-auto px-4">
-          <div className="bg-white shadow-md rounded-lg overflow-hidden my-8">
+          <div className="bg-white shadow-md rounded-lg overflow-hidden my-4 sm:my-8">
             <div className="p-6 w-full">
               <div className="flex items-center justify-center mb-4 text-yellow-600">
                 <ShieldAlert size={36} />
@@ -179,4 +181,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

@@ -22,7 +22,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-24' : 'pt-16'} pb-12 sm:pb-20 bg-gray-50`}>
+      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-36' : 'pt-28'} pb-12 sm:pb-20 bg-gray-50`}>
         <div className="container max-w-md mx-auto px-4">
           <div className="bg-white shadow-md rounded-lg overflow-hidden my-4 sm:my-8">
             <LoginForm />

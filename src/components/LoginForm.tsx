@@ -1,4 +1,5 @@
-import { useState, FormEvent, useEffect } from 'react';
+
+import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldAlert, MapPin } from 'lucide-react';
@@ -128,7 +129,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="mt-40 p-6 w-full">
+    <div className="p-6 w-full">
       <h2 className="text-2xl font-bold mb-6 text-center">Entrar</h2>
       
       {errors.general && (
