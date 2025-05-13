@@ -32,6 +32,7 @@ export function AdminPayments() {
   const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'pago' | 'cancelado'>('todos');
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
@@ -121,6 +122,20 @@ export function AdminPayments() {
     }
   };
 
+  const handleClearPayments = () => {
+    setIsClearDialogOpen(true);
+  };
+
+  const handleConfirmClear = () => {
+    setPayments([]);
+    setFilteredPayments([]);
+    setIsClearDialogOpen(false);
+    toast({
+      title: 'Lista limpa',
+      description: 'A lista de pagamentos foi limpa com sucesso.'
+    });
+  };
+
   const formatCurrency = (value: number) => {
     return `R$ ${value.toFixed(2)}`;
   };
@@ -140,7 +155,7 @@ export function AdminPayments() {
             <p className="text-text">Aprove ou rejeite solicitações de pagamento dos usuários.</p>
           </div>
           
-          <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+          <div className="flex flex-wrap gap-2 w-full lg:w-auto items-center">
             <Button 
               variant={statusFilter === 'todos' ? 'default' : 'outline'}
               onClick={() => handleStatusFilterChange('todos')}
@@ -168,6 +183,13 @@ export function AdminPayments() {
               className="flex-1 lg:flex-none"
             >
               Rejeitados
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleClearPayments}
+              className="flex-1 lg:flex-none text-red-600 border-red-600 hover:bg-red-50"
+            >
+              Limpar clientes
             </Button>
           </div>
         </div>
@@ -317,6 +339,34 @@ export function AdminPayments() {
                   onClick={handleConfirmReject}
                 >
                   Rejeitar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Limpar Clientes */}
+      {isClearDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Confirmar Limpar Lista</h2>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja limpar toda a lista de pagamentos exibida?
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsClearDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmClear}
+                >
+                  Limpar
                 </Button>
               </div>
             </div>

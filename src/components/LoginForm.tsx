@@ -1,8 +1,7 @@
-
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ShieldAlert, MapPin } from 'lucide-react';
+import { Loader2, ShieldAlert, MapPin, Eye, EyeOff } from 'lucide-react';
 
 // Lista de estados brasileiros
 const estadosBrasileiros = [
@@ -39,6 +38,7 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [estado, setEstado] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     email?: string;
@@ -162,16 +162,25 @@ const LoginForm = () => {
           <label htmlFor="password" className="block text-sm font-medium text-text-dark mb-1">
             Senha
           </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-red-500 text-xs mt-1">{errors.password}</p>
           )}

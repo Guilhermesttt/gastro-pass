@@ -125,7 +125,7 @@ const ChangePassword = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow pt-60 pb-16">
         <div className="container max-w-2xl mx-auto px-4">
           <button 
             onClick={() => navigate('/dashboard')} 

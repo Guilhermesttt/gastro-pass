@@ -191,7 +191,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow pt-60 pb-16">
         <div className="container-custom">
           {/* User welcome section */}
           <div className="mb-10">

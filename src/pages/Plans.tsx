@@ -96,7 +96,7 @@ const Plans = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-28 pb-20">
+      <main className="flex-grow pt-60 pb-20">
         <div className="container-custom">
           {/* Botão Voltar */}
           <div className="mb-8">

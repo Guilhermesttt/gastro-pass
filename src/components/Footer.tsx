@@ -58,13 +58,7 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-6 text-white border-b border-white/20 pb-2">Redes Sociais</h3>
             <div className="flex space-x-4 mb-8">
               <a href="#" className="w-10 h-10 rounded-custom bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-white transition-colors shadow-custom">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-custom bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-white transition-colors shadow-custom">
                 <Instagram size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-custom bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-white transition-colors shadow-custom">
-                <Twitter size={20} />
               </a>
             </div>
             <div>

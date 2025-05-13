@@ -20,7 +20,7 @@ const Navbar = () => {
   };
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    if (path === '/') {
+    if (path === '/' && location.pathname === '/') {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setIsOpen(false);

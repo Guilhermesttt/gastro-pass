@@ -3,20 +3,50 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
+// Lista de estados brasileiros
+const estadosBrasileiros = [
+  { value: 'AC', label: 'Acre' },
+  { value: 'AL', label: 'Alagoas' },
+  { value: 'AP', label: 'Amapá' },
+  { value: 'AM', label: 'Amazonas' },
+  { value: 'BA', label: 'Bahia' },
+  { value: 'CE', label: 'Ceará' },
+  { value: 'DF', label: 'Distrito Federal' },
+  { value: 'ES', label: 'Espírito Santo' },
+  { value: 'GO', label: 'Goiás' },
+  { value: 'MA', label: 'Maranhão' },
+  { value: 'MT', label: 'Mato Grosso' },
+  { value: 'MS', label: 'Mato Grosso do Sul' },
+  { value: 'MG', label: 'Minas Gerais' },
+  { value: 'PA', label: 'Pará' },
+  { value: 'PB', label: 'Paraíba' },
+  { value: 'PR', label: 'Paraná' },
+  { value: 'PE', label: 'Pernambuco' },
+  { value: 'PI', label: 'Piauí' },
+  { value: 'RJ', label: 'Rio de Janeiro' },
+  { value: 'RN', label: 'Rio Grande do Norte' },
+  { value: 'RS', label: 'Rio Grande do Sul' },
+  { value: 'RO', label: 'Rondônia' },
+  { value: 'RR', label: 'Roraima' },
+  { value: 'SC', label: 'Santa Catarina' },
+  { value: 'SP', label: 'São Paulo' },
+  { value: 'SE', label: 'Sergipe' },
+  { value: 'TO', label: 'Tocantins' }
+];
+
 const RegisterForm = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [location, setLocation] = useState('');
-  const [availableLocations, setAvailableLocations] = useState<{value: string, label: string}[]>([]);
+  const [estado, setEstado] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
-    location?: string;
+    estado?: string;
     general?: string;
   }>({});
 
@@ -37,10 +67,12 @@ const RegisterForm = () => {
             label: location as string
           }));
         
-        setAvailableLocations(uniqueLocations);
+        // This useEffect is no longer needed for states, but keeping it for now if 'location' is used elsewhere.
+        // If 'location' is not used elsewhere, this useEffect can be removed.
+        // setAvailableLocations(uniqueLocations);
       } catch (error) {
         console.error('Erro ao carregar localidades:', error);
-        setAvailableLocations([]);
+        // setAvailableLocations([]);
       }
     }
   }, []);
@@ -51,7 +83,7 @@ const RegisterForm = () => {
       email?: string;
       password?: string;
       confirmPassword?: string;
-      location?: string;
+      estado?: string;
     } = {};
 
     // Name validation
@@ -88,8 +120,8 @@ const RegisterForm = () => {
     }
 
     // Location validation
-    if (!location) {
-      newErrors.location = 'Selecione sua localidade';
+    if (!estado) {
+      newErrors.estado = 'Selecione seu estado';
     }
 
     setErrors(newErrors);
@@ -115,7 +147,7 @@ const RegisterForm = () => {
         name,
         email,
         password,
-        location,
+        estado,
         createdAt: new Date().toISOString(),
         isAdmin: false,
       };
@@ -130,7 +162,7 @@ const RegisterForm = () => {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        location: newUser.location,
+        estado: newUser.estado,
         createdAt: newUser.createdAt,
         isAdmin: false,
       }));
@@ -152,7 +184,7 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="mt-40 p-6 w-full">
+    <div className="p-6 w-full">
       <h2 className="text-2xl font-bold mb-6 text-center">Criar Conta</h2>
       
       {errors.general && (
@@ -201,39 +233,26 @@ const RegisterForm = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="location" className="block text-sm font-medium text-text-dark mb-1">
-            Localidade
+          <label htmlFor="estado" className="block text-sm font-medium text-text-dark mb-1">
+            Estado
           </label>
           <select
-            id="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            id="estado"
+            value={estado}
+            onChange={(e) => setEstado(e.target.value)}
             className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.location ? 'border-red-500' : 'border-gray-300'
+              errors.estado ? 'border-red-500' : 'border-gray-300'
             }`}
           >
-            <option value="">Selecione sua região</option>
-            {availableLocations.length > 0 ? (
-              availableLocations.map((loc) => (
-                <option key={loc.value} value={loc.value}>
-                  {loc.label}
-                </option>
-              ))
-            ) : (
-              <>
-                <option value="Centro">Centro</option>
-                <option value="Vila Mariana">Vila Mariana</option>
-                <option value="Pinheiros">Pinheiros</option>
-                <option value="Jardins">Jardins</option>
-                <option value="Itaim">Itaim</option>
-                <option value="Moema">Moema</option>
-                <option value="Perdizes">Perdizes</option>
-                <option value="Santana">Santana</option>
-              </>
-            )}
+            <option value="">Selecione seu estado</option>
+            {estadosBrasileiros.map((estado) => (
+              <option key={estado.value} value={estado.value}>
+                {estado.label}
+              </option>
+            ))}
           </select>
-          {errors.location && (
-            <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+          {errors.estado && (
+            <p className="text-red-500 text-xs mt-1">{errors.estado}</p>
           )}
         </div>
 

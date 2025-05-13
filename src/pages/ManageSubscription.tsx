@@ -237,7 +237,7 @@ const ManageSubscription = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow pt-60 pb-16">
         <div className="container max-w-4xl mx-auto px-4">
           <button 
             onClick={() => navigate('/dashboard')} 

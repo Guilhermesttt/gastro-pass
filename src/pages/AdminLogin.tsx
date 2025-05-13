@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 // Credenciais de administrador
@@ -13,6 +13,7 @@ const ADMIN_PASSWORD = 'admin@998';
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     email?: string;
@@ -94,7 +95,7 @@ const AdminLogin = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-36' : 'pt-28'} pb-20 bg-gray-50`}>
+      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-36' : 'pt-60'} pb-20 bg-gray-50`}>
         <div className="container max-w-md mx-auto px-4">
           <div className="bg-white shadow-md rounded-lg overflow-hidden my-4 sm:my-8">
             <div className="p-6 w-full">
@@ -134,16 +135,25 @@ const AdminLogin = () => {
                   <label htmlFor="password" className="block text-sm font-medium text-text-dark mb-1">
                     Senha de Administrador
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      errors.password ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary pr-10 ${
+                        errors.password ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {errors.password && (
                     <p className="text-red-500 text-xs mt-1">{errors.password}</p>
                   )}
