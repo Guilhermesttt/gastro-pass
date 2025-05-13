@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -47,9 +46,6 @@ const Hero = () => {
               <Link to="/register" className="btn btn-primary text-center shadow-custom-lg group">
                 Começar Agora
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link to="/#how-it-works" className="btn btn-outline text-center group">
-                Saiba Mais
               </Link>
             </motion.div>
           </motion.div>
