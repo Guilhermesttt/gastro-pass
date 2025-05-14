@@ -120,7 +120,7 @@ const Navbar = () => {
                   key={item.name}
                   to={item.path}
                   onClick={(e) => handleSmoothScroll(e, item.path)}
-                  className="text-foreground hover:text-primary font-medium transition-colors duration-200"
+                  className="text-foreground hover:text-primary font-medium transition-all duration-300 hover:-translate-y-0.5"
                 >
                   {item.name}
                 </Link>
@@ -132,7 +132,7 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/dashboard"
-                    className="flex items-center text-primary hover:text-primary-dark transition-colors duration-200 font-medium"
+                    className="flex items-center text-primary hover:text-primary-dark transition-all duration-300 font-medium hover:-translate-y-0.5"
                   >
                     <User size={20} className="mr-1" />
                     <span>Minha Conta</span>
@@ -140,7 +140,7 @@ const Navbar = () => {
                   {isAdmin && (
                     <Link
                       to="/admin"
-                      className="btn btn-secondary"
+                      className="btn btn-secondary transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 shine-effect"
                     >
                       Admin
                     </Link>
@@ -150,13 +150,13 @@ const Navbar = () => {
                 <>
                   <Link 
                     to="/login" 
-                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                    className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:-translate-y-0.5"
                   >
                     Entrar
                   </Link>
                   <Link
                     to="/register"
-                    className="btn btn-primary"
+                    className="btn btn-primary transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 shine-effect"
                   >
                     Cadastre-se
                   </Link>
@@ -169,7 +169,7 @@ const Navbar = () => {
           <div className="md:hidden flex items-center z-50">
             <button
               onClick={toggleMenu}
-              className="p-2 rounded-custom text-foreground hover:text-primary focus:outline-none"
+              className="p-2 rounded-custom text-foreground hover:text-primary focus:outline-none transition-all duration-200 hover:scale-110 hover:bg-background"
               aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
               aria-expanded={isOpen}
             >
@@ -190,7 +190,7 @@ const Navbar = () => {
                     key={item.name}
                     to={item.path}
                     onClick={(e) => handleSmoothScroll(e, item.path)}
-                    className="text-lg font-medium text-foreground hover:text-primary transition-colors block py-2"
+                    className="text-lg font-medium text-foreground hover:text-primary transition-all duration-300 block py-2 hover:translate-x-1"
                   >
                     {item.name}
                   </Link>
@@ -201,7 +201,7 @@ const Navbar = () => {
                   <>
                     <Link
                       to="/dashboard"
-                      className="btn btn-primary w-full flex justify-center items-center"
+                      className="btn btn-primary w-full flex justify-center items-center transition-all duration-300 hover:shadow-md hover:-translate-y-1 active:translate-y-0 shine-effect"
                       onClick={(e) => handleSmoothScroll(e, '/dashboard')}
                     >
                       <User size={20} className="mr-2" />
@@ -210,7 +210,7 @@ const Navbar = () => {
                     {isAdmin && (
                       <Link
                         to="/admin"
-                        className="btn btn-secondary w-full flex justify-center items-center"
+                        className="btn btn-secondary w-full flex justify-center items-center transition-all duration-300 hover:shadow-md hover:-translate-y-1 active:translate-y-0 shine-effect"
                         onClick={(e) => handleSmoothScroll(e, '/admin')}
                       >
                         Admin
@@ -221,14 +221,14 @@ const Navbar = () => {
                   <>
                     <Link
                       to="/login"
-                      className="btn btn-outline w-full text-center"
+                      className="btn btn-outline w-full text-center transition-all duration-300 hover:shadow-sm hover:-translate-y-1 active:translate-y-0 shine-effect"
                       onClick={(e) => handleSmoothScroll(e, '/login')}
                     >
                       Entrar
                     </Link>
                     <Link
                       to="/register"
-                      className="btn btn-primary w-full text-center"
+                      className="btn btn-primary w-full text-center transition-all duration-300 hover:shadow-md hover:-translate-y-1 active:translate-y-0 shine-effect"
                       onClick={(e) => handleSmoothScroll(e, '/register')}
                     >
                       Cadastre-se

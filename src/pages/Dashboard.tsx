@@ -6,11 +6,13 @@ import RestaurantCard from '@/components/RestaurantCard';
 import Footer from '@/components/Footer';
 import UserAccountSection from '@/components/UserAccountSection';
 import { Dialog } from '@/components/ui/dialog';
-import { Search, MapPin, Star, User, Store, Info, AlertTriangle } from 'lucide-react';
+import { Search, MapPin, Star, User, Store, Info, AlertTriangle, X } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { useBenefit, getUserBenefits } from '@/lib/userBenefits';
 import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
+import { Button } from '@/components/ui/button';
 
 // Use the Restaurant interface from mockData.ts
 // Removing the local Restaurant interface since we're importing it
@@ -31,6 +33,10 @@ const Dashboard = () => {
   const [noRestaurantsInArea, setNoRestaurantsInArea] = useState(false);
   const [noRestaurants, setNoRestaurants] = useState(false);
   const [benefits, setBenefits] = useState(getUserBenefits());
+  
+  // Estado para controlar a exibição do QR Code
+  const [isQrCodeModalOpen, setIsQrCodeModalOpen] = useState(false);
+  const [qrCodeRestaurant, setQrCodeRestaurant] = useState<Restaurant | null>(null);
 
   // Categories for filter
   const categories = [
@@ -163,6 +169,19 @@ const Dashboard = () => {
     setIsModalOpen(false);
     setSelectedRestaurant(null);
   };
+  
+  // Função para exibir o QR code de um restaurante
+  const handleQrCodeClick = (restaurant: Restaurant, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setQrCodeRestaurant(restaurant);
+    setIsQrCodeModalOpen(true);
+  };
+  
+  // Função para fechar o modal de QR code
+  const handleCloseQrCodeModal = () => {
+    setIsQrCodeModalOpen(false);
+    setQrCodeRestaurant(null);
+  };
 
   const handleBenefitRedemption = (restaurant: any) => {
     const result = useBenefit();
@@ -212,10 +231,10 @@ const Dashboard = () => {
             <button
               onClick={() => setActiveTab('restaurants')}
               className={cn(
-                "flex items-center px-6 py-3 font-medium transition-colors",
+                "flex items-center px-6 py-3 font-medium transition-all duration-300",
                 activeTab === 'restaurants'
-                  ? "text-primary border-b-2 border-primary -mb-px"
-                  : "text-foreground-light hover:text-primary"
+                  ? "text-primary border-b-2 border-primary -mb-px hover:bg-primary/5"
+                  : "text-foreground-light hover:text-primary hover:-translate-y-0.5"
               )}
             >
               <Store className="w-5 h-5 mr-2" />
@@ -224,10 +243,10 @@ const Dashboard = () => {
             <button
               onClick={() => setActiveTab('account')}
               className={cn(
-                "flex items-center px-6 py-3 font-medium transition-colors",
+                "flex items-center px-6 py-3 font-medium transition-all duration-300",
                 activeTab === 'account'
-                  ? "text-primary border-b-2 border-primary -mb-px"
-                  : "text-foreground-light hover:text-primary"
+                  ? "text-primary border-b-2 border-primary -mb-px hover:bg-primary/5"
+                  : "text-foreground-light hover:text-primary hover:-translate-y-0.5"
               )}
             >
               <User className="w-5 h-5 mr-2" />
@@ -285,7 +304,7 @@ const Dashboard = () => {
                       <input
                         type="text"
                         placeholder="Buscar restaurantes..."
-                        className="pl-10 pr-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="pl-10 pr-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 hover:shadow-sm focus:shadow-md"
                         value={searchQuery}
                         onChange={handleSearchChange}
                       />
@@ -295,7 +314,7 @@ const Dashboard = () => {
                       <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 hover:shadow-sm hover:border-gray-400"
                       >
                         {categories.map((category) => (
                           <option key={category.value} value={category.value}>
@@ -307,7 +326,7 @@ const Dashboard = () => {
                       <select
                         value={selectedLocation}
                         onChange={(e) => setSelectedLocation(e.target.value)}
-                        className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 hover:shadow-sm hover:border-gray-400"
                       >
                         {locations.map((location) => (
                           <option key={location.value} value={location.value}>
@@ -334,7 +353,9 @@ const Dashboard = () => {
                       address={restaurant.address}
                       rating={restaurant.rating}
                       discount={restaurant.discount}
+                      qrCode={restaurant.qrCode}
                       onClick={() => handleRestaurantClick(restaurant)}
+                      onQrCodeClick={(e) => handleQrCodeClick(restaurant, e)}
                     />
                   ))}
                 </div>
@@ -361,12 +382,12 @@ const Dashboard = () => {
                 />
                 <button
                   onClick={handleCloseModal}
-                  className="absolute top-4 right-4 rounded-full bg-white p-1"
+                  className="absolute top-4 right-4 rounded-full bg-white p-1.5 hover:bg-gray-200 transition-all duration-200 hover:rotate-90 hover:scale-110"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -429,10 +450,62 @@ const Dashboard = () => {
                 
                 <button
                   onClick={() => handleBenefitRedemption(selectedRestaurant)}
-                  className="btn btn-primary w-full"
+                  className="btn btn-primary w-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 transform hover:bg-primary-dark shine-effect relative overflow-hidden"
                 >
                   Resgatar Benefício
+                  <span className="shine"></span>
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Dialog>
+      
+      {/* QR Code Modal */}
+      <Dialog open={isQrCodeModalOpen} onOpenChange={setIsQrCodeModalOpen}>
+        {qrCodeRestaurant && qrCodeRestaurant.qrCode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg max-w-md w-full overflow-auto p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">QR Code - {qrCodeRestaurant.name}</h3>
+                <button
+                  onClick={handleCloseQrCodeModal}
+                  className="rounded-full bg-gray-100 p-1.5 transition-all duration-200 hover:bg-gray-200 hover:rotate-90 hover:scale-110"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <div className="flex flex-col items-center justify-center p-4">
+                <div className="p-4 bg-white rounded-lg shadow-sm border mb-4">
+                  <QRCodeSVG 
+                    value={qrCodeRestaurant.qrCode} 
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+                
+                <p className="text-center text-sm text-muted-foreground mb-4">
+                  Apresente este QR code ao estabelecimento para obter seu desconto:{" "}
+                  <span className="font-semibold text-foreground">{qrCodeRestaurant.discount}</span>
+                </p>
+                
+                <Button
+                  onClick={() => {
+                    // Criar um elemento canvas temporário para fazer o download
+                    const canvas = document.querySelector("canvas");
+                    if (canvas) {
+                      const link = document.createElement("a");
+                      link.href = canvas.toDataURL("image/png");
+                      link.download = `qrcode-${qrCodeRestaurant.id}.png`;
+                      link.click();
+                    }
+                  }}
+                  className="btn-secondary w-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 shine-effect"
+                >
+                  Baixar QR Code
+                </Button>
               </div>
             </div>
           </div>

@@ -29,7 +29,9 @@ import {
   Clock, 
   Image as ImageIcon,
   Upload,
-  RefreshCw
+  RefreshCw,
+  QrCode,
+  X
 } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
 import {
@@ -42,6 +44,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QRCodeSVG } from 'qrcode.react';
 
 // Opções de horários pré-definidas
 const timeSlots = {
@@ -123,7 +126,8 @@ const AdminRestaurants = () => {
     discount: '',
     description: '',
     image: defaultImage,
-    estado: '' // Novo campo para o estado
+    estado: '', // Novo campo para o estado
+    qrCode: '' // Campo para armazenar o QR code
   });
   
   // Estado para o filtro de estados
@@ -137,6 +141,13 @@ const AdminRestaurants = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para exibir o QR code no formulário
+  const [showQRCode, setShowQRCode] = useState(false);
+  
+  // Estado para exibir o QR code em um modal separado
+  const [isQrCodeModalOpen, setIsQrCodeModalOpen] = useState(false);
+  const [qrCodeRestaurant, setQrCodeRestaurant] = useState<Restaurant | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -291,7 +302,8 @@ const AdminRestaurants = () => {
         discount: restaurant.discount,
         description: restaurant.description || '',
         image: restaurant.image,
-        estado: restaurant.estado || '' // Recuperar o estado do restaurante
+        estado: restaurant.estado || '', // Recuperar o estado do restaurante
+        qrCode: restaurant.qrCode || '' // Recuperar o QR code do restaurante
       });
       
       // Definir visualização da imagem
@@ -315,6 +327,7 @@ const AdminRestaurants = () => {
       }
       
       setCurrentRestaurant(restaurant);
+      setShowQRCode(!!restaurant.qrCode);
     } else {
       // Valores padrão para novo restaurante
       setFormData({
@@ -329,12 +342,14 @@ const AdminRestaurants = () => {
         discount: '',
         description: '',
         image: defaultImage,
-        estado: '' // Estado vazio para novo restaurante
+        estado: '', // Estado vazio para novo restaurante
+        qrCode: '' // QR code vazio para novo restaurante
       });
       setImagePreview(defaultImage);
       setSelectedTimeSlotType("fullDay");
       setSelectedTimeSlot(timeSlots.fullDay[0].value);
       setCurrentRestaurant(null);
+      setShowQRCode(false);
     }
     resetFileInput();
     setIsFormOpen(true);
@@ -353,12 +368,25 @@ const AdminRestaurants = () => {
       return;
     }
 
+    // Gerar o QR code como uma string de dados
+    const qrCodeData = JSON.stringify({
+      id: formData.id,
+      name: formData.name,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Atualizar o formData com o QR code gerado
+    const updatedFormData = {
+      ...formData,
+      qrCode: qrCodeData
+    };
+
     let updatedRestaurants: Restaurant[];
     
     if (currentRestaurant?.id) {
       // Update existing restaurant
       updatedRestaurants = restaurants.map(rest => 
-        rest.id === formData.id ? formData as Restaurant : rest
+        rest.id === formData.id ? updatedFormData as Restaurant : rest
       );
       
       toast({
@@ -367,7 +395,7 @@ const AdminRestaurants = () => {
       });
     } else {
       // Add new restaurant
-      updatedRestaurants = [...restaurants, formData as Restaurant];
+      updatedRestaurants = [...restaurants, updatedFormData as Restaurant];
       
       toast({
         title: 'Restaurante adicionado',
@@ -377,7 +405,11 @@ const AdminRestaurants = () => {
     
     setRestaurants(updatedRestaurants);
     localStorage.setItem('restaurants', JSON.stringify(updatedRestaurants));
-    setIsFormOpen(false);
+    
+    // Mostrar o QR code após salvar
+    setCurrentRestaurant(updatedFormData as Restaurant);
+    setFormData(updatedFormData);
+    setShowQRCode(true);
   };
 
   const handleConfirmDelete = () => {
@@ -402,6 +434,25 @@ const AdminRestaurants = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  // Função para exibir o QR code no formulário
+  const handleShowQRCode = (restaurant: Restaurant) => {
+    setCurrentRestaurant(restaurant);
+    setQrCodeRestaurant(restaurant);
+    setIsQrCodeModalOpen(true);
+  };
+
+  // Função para fechar o modal de QR code
+  const handleCloseQRCode = () => {
+    setShowQRCode(false);
+    setIsFormOpen(false);
+  };
+  
+  // Função para fechar o modal de visualização do QR code
+  const handleCloseQrCodeModal = () => {
+    setIsQrCodeModalOpen(false);
+    setQrCodeRestaurant(null);
+  };
+
   if (!isAdmin) {
     return <div>Carregando...</div>;
   }
@@ -419,7 +470,7 @@ const AdminRestaurants = () => {
           
           <Button 
             onClick={() => handleOpenForm()}
-            className="flex items-center gap-2 w-full lg:w-auto"
+            className="flex items-center gap-2 w-full lg:w-auto transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 shine-effect"
           >
             <PlusCircle size={16} />
             Novo Restaurante
@@ -492,6 +543,7 @@ const AdminRestaurants = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenForm(restaurant)}
+                            className="transition-all duration-200 hover:scale-110 hover:shadow-sm shine-effect"
                           >
                             <Pencil size={16} />
                           </Button>
@@ -499,10 +551,20 @@ const AdminRestaurants = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteClick(restaurant)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 transition-all duration-200 hover:scale-110 hover:shadow-sm hover:bg-red-50 shine-effect"
                           >
                             <Trash size={16} />
                           </Button>
+                          {restaurant.qrCode && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleShowQRCode(restaurant)}
+                              className="text-black hover:text-black/80 transition-all duration-200 hover:scale-110 hover:shadow-sm shine-effect"
+                            >
+                              <QrCode size={16} />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -533,264 +595,359 @@ const AdminRestaurants = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-              {/* Linha 1: Nome e Categoria */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <div className="space-y-1">
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
-                    Nome do Restaurante *
-                  </label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="bg-card"
+            {showQRCode && currentRestaurant ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <h3 className="text-lg font-medium mb-4">QR Code do Restaurante</h3>
+                <div className="p-4 bg-white rounded-lg shadow-sm border">
+                  <QRCodeSVG 
+                    value={currentRestaurant.qrCode || JSON.stringify({id: currentRestaurant.id, name: currentRestaurant.name})} 
+                    size={200}
+                    level="H"
+                    includeMargin={true}
                   />
                 </div>
-                <div className="space-y-1">
-                  <label htmlFor="category" className="block text-sm font-medium text-foreground">
-                    Categoria *
-                  </label>
-                  <Input
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    placeholder="Ex: Italiana • $$"
-                    required
-                    className="bg-card"
-                  />
-                </div>
-              </div>
-
-              {/* Linha 2: Estado e Bairro/Região */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <div className="space-y-1">
-                  <label htmlFor="estado" className="block text-sm font-medium text-foreground">
-                    Estado *
-                  </label>
-                  <select
-                    id="estado"
-                    name="estado"
-                    value={formData.estado}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border rounded-md bg-card"
-                  >
-                    <option value="">Selecione o estado</option>
-                    {estadosBrasileiros.map((estado) => (
-                      <option key={estado.value} value={estado.value}>
-                        {estado.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="location" className="block text-sm font-medium text-foreground">
-                    Bairro/Região *
-                  </label>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    required
-                    className="bg-card"
-                  />
-                </div>
-              </div>
-
-              {/* Linha 3: Endereço Completo */}
-              <div className="space-y-1">
-                <label htmlFor="address" className="block text-sm font-medium text-foreground">
-                  Endereço Completo
-                </label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="bg-card"
-                />
-              </div>
-
-              {/* Linha 4: Telefone e Desconto */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <div className="space-y-1">
-                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
-                    Telefone
-                  </label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="bg-card"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="discount" className="block text-sm font-medium text-foreground">
-                    Desconto/Benefício *
-                  </label>
-                  <Input
-                    id="discount"
-                    name="discount"
-                    value={formData.discount}
-                    onChange={handleInputChange}
-                    placeholder="Ex: 15% OFF"
-                    required
-                    className="bg-card"
-                  />
-                </div>
-              </div>
-
-              {/* Horário de Funcionamento com opções pré-definidas */}
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <Clock size={18} className="mr-2 text-primary" />
-                  <label className="text-sm font-medium text-foreground">
-                    Horário de Funcionamento
-                  </label>
-                </div>
-                
-                <Tabs 
-                  value={selectedTimeSlotType} 
-                  onValueChange={handleTimeSlotTypeChange}
-                  className="w-full"
-                >
-                  <TabsList className="grid grid-cols-4 mb-4">
-                    <TabsTrigger value="morning">Manhã</TabsTrigger>
-                    <TabsTrigger value="afternoon">Tarde</TabsTrigger>
-                    <TabsTrigger value="night">Noite</TabsTrigger>
-                    <TabsTrigger value="fullDay">Dia Todo</TabsTrigger>
-                  </TabsList>
-                  
-                  {Object.entries(timeSlots).map(([type, slots]) => (
-                    <TabsContent key={type} value={type} className="mt-0">
-                      <RadioGroup 
-                        value={selectedTimeSlot}
-                        onValueChange={handleTimeSlotChange}
-                        className="grid grid-cols-2 gap-4"
-                      >
-                        {slots.map((slot) => (
-                          <div key={slot.id} className="flex items-center space-x-2">
-                            <RadioGroupItem value={slot.value} id={slot.id} />
-                            <Label htmlFor={slot.id}>{slot.label}</Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </div>
-
-              {/* Avaliação */}
-              <div className="space-y-1">
-                <label htmlFor="rating" className="block text-sm font-medium text-foreground">
-                  Avaliação (1-5)
-                </label>
-                <Input
-                  id="rating"
-                  name="rating"
-                  type="number"
-                  min="1"
-                  max="5"
-                  step="0.1"
-                  value={formData.rating}
-                  onChange={handleInputChange}
-                  className="bg-card"
-                />
-              </div>
-
-              {/* Upload de Imagem */}
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <ImageIcon size={18} className="mr-2 text-primary" />
-                  <label className="text-sm font-medium text-foreground">
-                    Imagem do Restaurante
-                  </label>
-                </div>
-                
-                {/* Input de arquivo escondido */}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageUpload} 
-                  className="hidden"
-                  ref={fileInputRef}
-                />
-                
-                {/* Botão para acionar o input de arquivo */}
-                <div className="flex gap-2">
-                  <Button 
-                    type="button" 
-                    onClick={triggerFileInput}
+                <p className="mt-4 text-sm text-muted-foreground text-center">
+                  Este QR code é único para {currentRestaurant.name}.<br />
+                  Pode ser usado para identificação do restaurante no sistema.
+                </p>
+                <div className="flex gap-2 mt-6">
+                  <Button
                     variant="outline"
-                    className="flex items-center gap-2"
-                    disabled={isUploading}
+                    onClick={handleCloseQRCode}
                   >
-                    {isUploading ? (
-                      <>
-                        <RefreshCw size={16} className="animate-spin" />
-                        Carregando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload size={16} />
-                        Fazer Upload de Imagem
-                      </>
-                    )}
+                    Fechar
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Criar um elemento canvas temporário para fazer o download
+                      const canvas = document.querySelector("canvas");
+                      if (canvas) {
+                        const link = document.createElement("a");
+                        link.href = canvas.toDataURL("image/png");
+                        link.download = `qrcode-${currentRestaurant.id}.png`;
+                        link.click();
+                      }
+                    }}
+                  >
+                    Baixar QR Code
                   </Button>
                 </div>
-                
-                {/* Visualização da imagem */}
-                <div className="mt-4 rounded-lg overflow-hidden border">
-                  {imagePreview ? (
-                    <img 
-                      src={imagePreview} 
-                      alt="Visualização da imagem"
-                      className="w-full h-48 object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                      <p className="text-gray-400">Nenhuma imagem selecionada</p>
-                    </div>
-                  )}
-                </div>
               </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+                {/* Linha 1: Nome e Categoria */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="space-y-1">
+                    <label htmlFor="name" className="block text-sm font-medium text-foreground">
+                      Nome do Restaurante *
+                    </label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="bg-card"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="category" className="block text-sm font-medium text-foreground">
+                      Categoria *
+                    </label>
+                    <Input
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      placeholder="Ex: Italiana • $$"
+                      required
+                      className="bg-card"
+                    />
+                  </div>
+                </div>
 
-              {/* Linha 5: Descrição do Restaurante */}
-              <div className="space-y-1">
-                <label htmlFor="description" className="block text-sm font-medium text-foreground">
-                  Descrição do Restaurante
-                </label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="bg-card"
-                />
+                {/* Linha 2: Estado e Bairro/Região */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="space-y-1">
+                    <label htmlFor="estado" className="block text-sm font-medium text-foreground">
+                      Estado *
+                    </label>
+                    <select
+                      id="estado"
+                      name="estado"
+                      value={formData.estado}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border rounded-md bg-card"
+                    >
+                      <option value="">Selecione o estado</option>
+                      {estadosBrasileiros.map((estado) => (
+                        <option key={estado.value} value={estado.value}>
+                          {estado.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="location" className="block text-sm font-medium text-foreground">
+                      Bairro/Região *
+                    </label>
+                    <Input
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      required
+                      className="bg-card"
+                    />
+                  </div>
+                </div>
+
+                {/* Linha 3: Endereço Completo */}
+                <div className="space-y-1">
+                  <label htmlFor="address" className="block text-sm font-medium text-foreground">
+                    Endereço Completo
+                  </label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="bg-card"
+                  />
+                </div>
+
+                {/* Linha 4: Telefone e Desconto */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="space-y-1">
+                    <label htmlFor="phone" className="block text-sm font-medium text-foreground">
+                      Telefone
+                    </label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="bg-card"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="discount" className="block text-sm font-medium text-foreground">
+                      Desconto/Benefício *
+                    </label>
+                    <Input
+                      id="discount"
+                      name="discount"
+                      value={formData.discount}
+                      onChange={handleInputChange}
+                      placeholder="Ex: 15% OFF"
+                      required
+                      className="bg-card"
+                    />
+                  </div>
+                </div>
+
+                {/* Horário de Funcionamento com opções pré-definidas */}
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <Clock size={18} className="mr-2 text-primary" />
+                    <label className="text-sm font-medium text-foreground">
+                      Horário de Funcionamento
+                    </label>
+                  </div>
+                  
+                  <Tabs 
+                    value={selectedTimeSlotType} 
+                    onValueChange={handleTimeSlotTypeChange}
+                    className="w-full"
+                  >
+                    <TabsList className="grid grid-cols-4 mb-4">
+                      <TabsTrigger value="morning">Manhã</TabsTrigger>
+                      <TabsTrigger value="afternoon">Tarde</TabsTrigger>
+                      <TabsTrigger value="night">Noite</TabsTrigger>
+                      <TabsTrigger value="fullDay">Dia Todo</TabsTrigger>
+                    </TabsList>
+                    
+                    {Object.entries(timeSlots).map(([type, slots]) => (
+                      <TabsContent key={type} value={type} className="mt-0">
+                        <RadioGroup 
+                          value={selectedTimeSlot}
+                          onValueChange={handleTimeSlotChange}
+                          className="grid grid-cols-2 gap-4"
+                        >
+                          {slots.map((slot) => (
+                            <div key={slot.id} className="flex items-center space-x-2">
+                              <RadioGroupItem value={slot.value} id={slot.id} />
+                              <Label htmlFor={slot.id}>{slot.label}</Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                </div>
+
+                {/* Avaliação */}
+                <div className="space-y-1">
+                  <label htmlFor="rating" className="block text-sm font-medium text-foreground">
+                    Avaliação (1-5)
+                  </label>
+                  <Input
+                    id="rating"
+                    name="rating"
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    value={formData.rating}
+                    onChange={handleInputChange}
+                    className="bg-card"
+                  />
+                </div>
+
+                {/* Upload de Imagem */}
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <ImageIcon size={18} className="mr-2 text-primary" />
+                    <label className="text-sm font-medium text-foreground">
+                      Imagem do Restaurante
+                    </label>
+                  </div>
+                  
+                  {/* Input de arquivo escondido */}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                    className="hidden"
+                    ref={fileInputRef}
+                  />
+                  
+                  {/* Botão para acionar o input de arquivo */}
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      onClick={triggerFileInput}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <>
+                          <RefreshCw size={16} className="animate-spin" />
+                          Carregando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          Fazer Upload de Imagem
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {/* Visualização da imagem */}
+                  <div className="mt-4 rounded-lg overflow-hidden border">
+                    {imagePreview ? (
+                      <img 
+                        src={imagePreview} 
+                        alt="Visualização da imagem"
+                        className="w-full h-48 object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                        <p className="text-gray-400">Nenhuma imagem selecionada</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Linha 5: Descrição do Restaurante */}
+                <div className="space-y-1">
+                  <label htmlFor="description" className="block text-sm font-medium text-foreground">
+                    Descrição do Restaurante
+                  </label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className="bg-card"
+                  />
+                </div>
+                
+                <DialogFooter className="pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsFormOpen(false)}
+                    className="hover:bg-border"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="btn-primary">
+                    {currentRestaurant ? 'Salvar Alterações' : 'Adicionar Restaurante'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* QR Code Modal */}
+        <Dialog open={isQrCodeModalOpen} onOpenChange={setIsQrCodeModalOpen}>
+          {qrCodeRestaurant && qrCodeRestaurant.qrCode && (
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>QR Code - {qrCodeRestaurant.name}</DialogTitle>
+                <DialogDescription>
+                  Este QR code é único para este restaurante e pode ser escaneado pelos clientes.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="flex flex-col items-center justify-center p-4">
+                <div className="p-4 bg-white rounded-lg shadow-sm border mb-4">
+                  <QRCodeSVG 
+                    value={qrCodeRestaurant.qrCode} 
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+                
+                <p className="text-center text-sm text-muted-foreground mb-4">
+                  Este QR code contém informações como ID e nome do restaurante.<br />
+                  Pode ser usado para identificação do restaurante no sistema.
+                </p>
               </div>
               
-              <DialogFooter className="pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsFormOpen(false)}
-                  className="hover:bg-border"
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={handleCloseQrCodeModal}
+                  className="transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 shine-effect"
                 >
-                  Cancelar
+                  Fechar
                 </Button>
-                <Button type="submit" className="btn-primary">
-                  {currentRestaurant ? 'Salvar Alterações' : 'Adicionar Restaurante'}
+                <Button
+                  onClick={() => {
+                    // Criar um elemento canvas temporário para fazer o download
+                    const canvas = document.querySelector("canvas");
+                    if (canvas) {
+                      const link = document.createElement("a");
+                      link.href = canvas.toDataURL("image/png");
+                      link.download = `qrcode-${qrCodeRestaurant.id}.png`;
+                      link.click();
+                    }
+                  }}
+                  className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 shine-effect"
+                >
+                  Baixar QR Code
                 </Button>
               </DialogFooter>
-            </form>
-          </DialogContent>
+            </DialogContent>
+          )}
         </Dialog>
         
         {/* Delete Confirmation Dialog */}

@@ -1,5 +1,4 @@
-
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Star, QrCode } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface RestaurantCardProps {
@@ -11,7 +10,9 @@ interface RestaurantCardProps {
   rating: number;
   discount: string;
   address?: string;
+  qrCode?: string;
   onClick: () => void;
+  onQrCodeClick?: (event: React.MouseEvent) => void;
 }
 
 const RestaurantCard = ({
@@ -23,7 +24,9 @@ const RestaurantCard = ({
   address,
   rating,
   discount,
+  qrCode,
   onClick,
+  onQrCodeClick,
 }: RestaurantCardProps) => {
   return (
     <motion.div 
@@ -40,6 +43,25 @@ const RestaurantCard = ({
         >
           {discount}
         </motion.div>
+        {qrCode && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ 
+              scale: 1.15, 
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)" 
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute top-3 left-3 bg-white text-black p-1.5 z-10 rounded-md shadow-lg cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onQrCodeClick && onQrCodeClick(e);
+            }}
+          >
+            <QrCode size={18} />
+          </motion.div>
+        )}
         <motion.img
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.4 }}

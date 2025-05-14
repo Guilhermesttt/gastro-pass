@@ -11,6 +11,7 @@ export interface Restaurant {
   phone?: string;
   hours?: string;
   estado?: string; // Estado brasileiro (UF)
+  qrCode?: string; // QR Code específico para o restaurante
 }
 
 export const getMockRestaurants = (): Restaurant[] => {
