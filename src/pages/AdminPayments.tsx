@@ -1,7 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import AdminSidebar from '@/components/AdminSidebar';
+import { LoadingScreen } from '@/components/ui/loading-screen';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ComponentLoader } from '@/components/ui/component-loader';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -34,6 +38,8 @@ export function AdminPayments() {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in as admin
@@ -50,17 +56,22 @@ export function AdminPayments() {
         return;
       }
       setIsAdmin(true);
+      
+      // Simulate loading delay for payments data
+      setTimeout(() => {
+        // Simular carregamento de pagamentos
+        const mockPayments: Payment[] = [];
+
+        setPayments(mockPayments);
+        updateFilteredPayments(mockPayments, statusFilter);
+        setIsLoading(false);
+      }, 800);
+      
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
       navigate('/admin-login');
       return;
     }
-    
-    // Simular carregamento de pagamentos
-    const mockPayments: Payment[] = [];
-
-    setPayments(mockPayments);
-    updateFilteredPayments(mockPayments, statusFilter);
   }, [navigate]);
 
   const updateFilteredPayments = (payments: Payment[], status: 'todos' | 'pendente' | 'pago' | 'cancelado') => {
@@ -88,37 +99,49 @@ export function AdminPayments() {
 
   const handleConfirmApprove = () => {
     if (currentPayment) {
-      let updatedPayments = payments.map(payment => 
-        payment.id === currentPayment.id 
-          ? { ...payment, status: 'pago' as const }
-          : payment
-      );
-      setPayments(updatedPayments);
-      updateFilteredPayments(updatedPayments, statusFilter);
-      setIsApproveDialogOpen(false);
+      setIsActionLoading(true);
       
-      toast({
-        title: 'Pagamento aprovado',
-        description: `O pagamento de ${currentPayment.userName} foi aprovado com sucesso.`
-      });
+      // Simulate processing delay
+      setTimeout(() => {
+        let updatedPayments = payments.map(payment => 
+          payment.id === currentPayment.id 
+            ? { ...payment, status: 'pago' as const }
+            : payment
+        );
+        setPayments(updatedPayments);
+        updateFilteredPayments(updatedPayments, statusFilter);
+        setIsApproveDialogOpen(false);
+        setIsActionLoading(false);
+        
+        toast({
+          title: 'Pagamento aprovado',
+          description: `O pagamento de ${currentPayment.userName} foi aprovado com sucesso.`
+        });
+      }, 800);
     }
   };
 
   const handleConfirmReject = () => {
     if (currentPayment) {
-      let updatedPayments = payments.map(payment => 
-        payment.id === currentPayment.id 
-          ? { ...payment, status: 'cancelado' as const }
-          : payment
-      );
-      setPayments(updatedPayments);
-      updateFilteredPayments(updatedPayments, statusFilter);
-      setIsRejectDialogOpen(false);
+      setIsActionLoading(true);
       
-      toast({
-        title: 'Pagamento rejeitado',
-        description: `O pagamento de ${currentPayment.userName} foi rejeitado.`
-      });
+      // Simulate processing delay
+      setTimeout(() => {
+        let updatedPayments = payments.map(payment => 
+          payment.id === currentPayment.id 
+            ? { ...payment, status: 'cancelado' as const }
+            : payment
+        );
+        setPayments(updatedPayments);
+        updateFilteredPayments(updatedPayments, statusFilter);
+        setIsRejectDialogOpen(false);
+        setIsActionLoading(false);
+        
+        toast({
+          title: 'Pagamento rejeitado',
+          description: `O pagamento de ${currentPayment.userName} foi rejeitado.`
+        });
+      }, 800);
     }
   };
 
@@ -127,21 +150,36 @@ export function AdminPayments() {
   };
 
   const handleConfirmClear = () => {
-    setPayments([]);
-    setFilteredPayments([]);
-    setIsClearDialogOpen(false);
-    toast({
-      title: 'Lista limpa',
-      description: 'A lista de pagamentos foi limpa com sucesso.'
-    });
+    setIsActionLoading(true);
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      setPayments([]);
+      setFilteredPayments([]);
+      setIsClearDialogOpen(false);
+      setIsActionLoading(false);
+      
+      toast({
+        title: 'Lista limpa',
+        description: 'A lista de pagamentos foi limpa com sucesso.'
+      });
+    }, 600);
   };
 
   const formatCurrency = (value: number) => {
     return `R$ ${value.toFixed(2)}`;
   };
 
-  if (!isAdmin) {
-    return <div>Carregando...</div>;
+  // Show loading screen while checking auth and loading initial data
+  if (!isAdmin || isLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar />
+        <div className="flex-1 p-8 w-full lg:ml-64 flex items-center justify-center">
+          <LoadingScreen text="Carregando dados de pagamentos..." />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -304,13 +342,22 @@ export function AdminPayments() {
                 <Button
                   variant="outline"
                   onClick={() => setIsApproveDialogOpen(false)}
+                  disabled={isActionLoading}
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleConfirmApprove}
+                  disabled={isActionLoading}
                 >
-                  Aprovar
+                  {isActionLoading ? (
+                    <span className="flex items-center">
+                      <LoadingSpinner size={16} />
+                      <span className="ml-2">Processando...</span>
+                    </span>
+                  ) : (
+                    'Aprovar'
+                  )}
                 </Button>
               </div>
             </div>
@@ -331,14 +378,23 @@ export function AdminPayments() {
                 <Button
                   variant="outline"
                   onClick={() => setIsRejectDialogOpen(false)}
+                  disabled={isActionLoading}
                 >
                   Cancelar
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={handleConfirmReject}
+                  disabled={isActionLoading}
                 >
-                  Rejeitar
+                  {isActionLoading ? (
+                    <span className="flex items-center">
+                      <LoadingSpinner size={16} />
+                      <span className="ml-2">Processando...</span>
+                    </span>
+                  ) : (
+                    'Rejeitar'
+                  )}
                 </Button>
               </div>
             </div>
@@ -359,14 +415,23 @@ export function AdminPayments() {
                 <Button
                   variant="outline"
                   onClick={() => setIsClearDialogOpen(false)}
+                  disabled={isActionLoading}
                 >
                   Cancelar
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={handleConfirmClear}
+                  disabled={isActionLoading}
                 >
-                  Limpar
+                  {isActionLoading ? (
+                    <span className="flex items-center">
+                      <LoadingSpinner size={16} />
+                      <span className="ml-2">Processando...</span>
+                    </span>
+                  ) : (
+                    'Limpar'
+                  )}
                 </Button>
               </div>
             </div>
@@ -377,4 +442,4 @@ export function AdminPayments() {
   );
 }
 
-export default AdminPayments; 
+export default AdminPayments;

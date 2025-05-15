@@ -1,22 +1,22 @@
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string;
   isAdmin?: boolean;
-  createdAt?: string;
-  status: 'ativo' | 'inativo';
+  location?: string;
 }
 
 export interface Payment {
   id: string;
-  userId: string;
-  userName?: string;
-  userEmail?: string;
-  date: string;
-  description: string;
+  userName: string;
   amount: number;
-  planId: string;
-  planName?: string;
+  date: string;
   status: 'pendente' | 'pago' | 'cancelado';
-} 
+}
+
+export interface UserAuth {
+  isLoggedIn: boolean;
+  isAdmin?: boolean;
+  user: User | null;
+}

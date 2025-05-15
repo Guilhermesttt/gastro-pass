@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -6,6 +7,8 @@ import RestaurantCard from '@/components/RestaurantCard';
 import Footer from '@/components/Footer';
 import UserAccountSection from '@/components/UserAccountSection';
 import { Dialog } from '@/components/ui/dialog';
+import { LoadingScreen } from '@/components/ui/loading-screen';
+import { ComponentLoader } from '@/components/ui/component-loader';
 import { Search, MapPin, Star, User, Store, Info, AlertTriangle, X } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
 import { cn } from '@/lib/utils';
@@ -13,9 +16,6 @@ import { useBenefit, getUserBenefits } from '@/lib/userBenefits';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
-
-// Use the Restaurant interface from mockData.ts
-// Removing the local Restaurant interface since we're importing it
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -33,6 +33,9 @@ const Dashboard = () => {
   const [noRestaurantsInArea, setNoRestaurantsInArea] = useState(false);
   const [noRestaurants, setNoRestaurants] = useState(false);
   const [benefits, setBenefits] = useState(getUserBenefits());
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRestaurantLoading, setIsRestaurantLoading] = useState(false);
+  const [isBenefitLoading, setIsBenefitLoading] = useState(false);
   
   // Estado para controlar a exibição do QR Code
   const [isQrCodeModalOpen, setIsQrCodeModalOpen] = useState(false);
@@ -61,54 +64,63 @@ const Dashboard = () => {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Load restaurants from localStorage if available
-      const storedRestaurants = localStorage.getItem('restaurants');
-      if (storedRestaurants) {
-        const parsedRestaurants = JSON.parse(storedRestaurants);
-        
-        if (parsedRestaurants.length === 0) {
+      // Simulate loading delay
+      setIsLoading(true);
+      
+      setTimeout(() => {
+        // Load restaurants from localStorage if available
+        const storedRestaurants = localStorage.getItem('restaurants');
+        if (storedRestaurants) {
+          const parsedRestaurants = JSON.parse(storedRestaurants);
+          
+          if (parsedRestaurants.length === 0) {
+            setNoRestaurants(true);
+            setRestaurants([]);
+            setFilteredRestaurants([]);
+            setIsLoading(false);
+            return;
+          }
+          
+          setRestaurants(parsedRestaurants);
+          
+          // Se o usuário tiver localidade definida, filtra por padrão
+          if (parsedUser.location) {
+            setSelectedLocation(parsedUser.location);
+            
+            // Verifica se existem restaurantes na localidade do usuário
+            const restaurantsInUserLocation = parsedRestaurants.filter(
+              (r: Restaurant) => r.location === parsedUser.location
+            );
+            
+            if (restaurantsInUserLocation.length === 0) {
+              setNoRestaurantsInArea(true);
+              setFilteredRestaurants(parsedRestaurants); // Mostra todos se não tiver na área
+              toast({
+                title: 'Sem restaurantes na sua área',
+                description: 'Não encontramos restaurantes na sua região. Mostrando todas as opções.',
+              });
+            } else {
+              setFilteredRestaurants(restaurantsInUserLocation);
+            }
+          } else {
+            setFilteredRestaurants(parsedRestaurants);
+          }
+        } else {
+          // Não há restaurantes cadastrados
           setNoRestaurants(true);
           setRestaurants([]);
           setFilteredRestaurants([]);
-          return;
         }
         
-        setRestaurants(parsedRestaurants);
-        
-        // Se o usuário tiver localidade definida, filtra por padrão
-        if (parsedUser.location) {
-          setSelectedLocation(parsedUser.location);
-          
-          // Verifica se existem restaurantes na localidade do usuário
-          const restaurantsInUserLocation = parsedRestaurants.filter(
-            (r: Restaurant) => r.location === parsedUser.location
-          );
-          
-          if (restaurantsInUserLocation.length === 0) {
-            setNoRestaurantsInArea(true);
-            setFilteredRestaurants(parsedRestaurants); // Mostra todos se não tiver na área
-            toast({
-              title: 'Sem restaurantes na sua área',
-              description: 'Não encontramos restaurantes na sua região. Mostrando todas as opções.',
-            });
-          } else {
-            setFilteredRestaurants(restaurantsInUserLocation);
-          }
-        } else {
-          setFilteredRestaurants(parsedRestaurants);
-        }
-      } else {
-        // Não há restaurantes cadastrados
-        setNoRestaurants(true);
-        setRestaurants([]);
-        setFilteredRestaurants([]);
-      }
+        setIsLoading(false);
 
-      // Welcome toast
-      toast({
-        title: 'Bem-vindo ao seu dashboard!',
-        description: `Olá, ${parsedUser.name}! Veja os restaurantes disponíveis hoje.`,
-      });
+        // Welcome toast
+        toast({
+          title: 'Bem-vindo ao seu dashboard!',
+          description: `Olá, ${parsedUser.name}! Veja os restaurantes disponíveis hoje.`,
+        });
+      }, 800); // Simulate loading delay
+      
     } catch (error) {
       console.error('Error parsing user data:', error);
       navigate('/login');
@@ -161,8 +173,14 @@ const Dashboard = () => {
   };
 
   const handleRestaurantClick = (restaurant: Restaurant) => {
+    setIsRestaurantLoading(true);
     setSelectedRestaurant(restaurant);
-    setIsModalOpen(true);
+    
+    // Simulate network delay for restaurant details
+    setTimeout(() => {
+      setIsRestaurantLoading(false);
+      setIsModalOpen(true);
+    }, 500);
   };
 
   const handleCloseModal = () => {
@@ -184,27 +202,47 @@ const Dashboard = () => {
   };
 
   const handleBenefitRedemption = (restaurant: any) => {
-    const result = useBenefit();
-    setBenefits(getUserBenefits()); // Atualiza o estado dos benefícios
+    setIsBenefitLoading(true);
     
-    if (result.success) {
-      toast({
-        title: 'Benefício resgatado!',
-        description: result.message,
-      });
-      handleCloseModal();
-    } else {
-      toast({
-        title: 'Benefícios esgotados',
-        description: result.message,
-        variant: 'destructive',
-      });
-      // Redireciona para a página de planos após 2 segundos
-      setTimeout(() => {
-        navigate('/plans');
-      }, 2000);
-    }
+    // Simulate processing delay
+    setTimeout(() => {
+      const result = useBenefit();
+      setBenefits(getUserBenefits()); // Atualiza o estado dos benefícios
+      
+      if (result.success) {
+        toast({
+          title: 'Benefício resgatado!',
+          description: result.message,
+        });
+        handleCloseModal();
+      } else {
+        toast({
+          title: 'Benefícios esgotados',
+          description: result.message,
+          variant: 'destructive',
+        });
+        // Redireciona para a página de planos após 2 segundos
+        setTimeout(() => {
+          navigate('/plans');
+        }, 2000);
+      }
+      
+      setIsBenefitLoading(false);
+    }, 1200);
   };
+
+  // Show loading screen while checking auth and loading initial data
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <LoadingScreen text="Carregando seu dashboard..." />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -371,7 +409,15 @@ const Dashboard = () => {
       
       {/* Restaurant detail modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        {selectedRestaurant && (
+        {isRestaurantLoading ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full p-8">
+              <div className="flex flex-col items-center justify-center">
+                <LoadingSpinner size={32} text="Carregando detalhes do restaurante..." />
+              </div>
+            </div>
+          </div>
+        ) : selectedRestaurant && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
               <div className="relative">
@@ -451,9 +497,19 @@ const Dashboard = () => {
                 <button
                   onClick={() => handleBenefitRedemption(selectedRestaurant)}
                   className="btn btn-primary w-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 transform hover:bg-primary-dark shine-effect relative overflow-hidden"
+                  disabled={isBenefitLoading}
                 >
-                  Resgatar Benefício
-                  <span className="shine"></span>
+                  {isBenefitLoading ? (
+                    <span className="flex items-center justify-center">
+                      <LoadingSpinner size={18} />
+                      <span className="ml-2">Processando...</span>
+                    </span>
+                  ) : (
+                    <>
+                      Resgatar Benefício
+                      <span className="shine"></span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
