@@ -9,6 +9,7 @@ import UserAccountSection from '@/components/UserAccountSection';
 import { Dialog } from '@/components/ui/dialog';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { ComponentLoader } from '@/components/ui/component-loader';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Search, MapPin, Star, User, Store, Info, AlertTriangle, X } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
 import { cn } from '@/lib/utils';
