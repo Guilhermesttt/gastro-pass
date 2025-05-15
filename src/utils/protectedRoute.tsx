@@ -56,10 +56,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
   
   // Se for um administrador, redirecionar para o painel admin
-  if (isAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
-
+  // Removemos esta parte para evitar loop de redirecionamento
+  // Se o usuário é admin mas está tentando acessar rotas protegidas
+  // normais (não admin), vamos deixar ele continuar para o dashboard
+  
   return <>{children}</>;
 };
 

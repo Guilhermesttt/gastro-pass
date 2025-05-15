@@ -57,6 +57,7 @@ const App = () => (
           </ProtectedRoute>
         } />
         
+        {/* Rotas exclusivas para administradores */}
         <Route path="/admin" element={
           <AdminProtectedRoute>
             <Admin />
