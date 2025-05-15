@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { User, LogOut, CreditCard, Calendar, Lock, Mail, Check } from 'lucide-react';
+import { User, LogOut, CreditCard, Calendar, Lock, Mail, Check, Shield } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -15,6 +15,14 @@ interface UserData {
     endDate: string;
     status: string;
   };
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  features: string[];
 }
 
 const UserAccountSection = () => {
@@ -34,15 +42,60 @@ const UserAccountSection = () => {
   });
   
   const [planName, setPlanName] = useState<string>('Nenhum');
+  const [planDetails, setPlanDetails] = useState<Plan | null>(null);
   
   useEffect(() => {
-    // Se o usuário tem uma assinatura ativa, buscar o nome do plano
+    // Se o usuário tem uma assinatura ativa, buscar os detalhes do plano
     if (userData?.subscription?.planId && userData.subscription.status === 'ativo') {
-      const plans = JSON.parse(localStorage.getItem('plans') || '[]');
+      // Buscar dados dos planos do localStorage
+      const storedPlans = localStorage.getItem('plans');
+      const plans = storedPlans ? JSON.parse(storedPlans) : [
+        {
+          id: 'basic',
+          name: 'Básico',
+          price: 19.90,
+          description: 'Ideal para usuários individuais',
+          features: [
+            'Acesso a 20 restaurantes',
+            'Descontos básicos',
+            'Suporte por email'
+          ]
+        },
+        {
+          id: 'premium',
+          name: 'Premium',
+          price: 39.90,
+          description: 'Para usuários que desejam mais benefícios',
+          features: [
+            'Acesso a todos os restaurantes',
+            'Descontos premium (até 30%)',
+            'Suporte prioritário',
+            'Cupons exclusivos mensais'
+          ]
+        },
+        {
+          id: 'family',
+          name: 'Família',
+          price: 59.90,
+          description: 'Perfeito para toda a família',
+          features: [
+            'Acesso a todos os restaurantes',
+            'Descontos premium (até 30%)',
+            'Até 4 usuários',
+            'Suporte prioritário 24/7',
+            'Cupons exclusivos semanais'
+          ]
+        }
+      ];
+      
       const plan = plans.find((p: any) => p.id === userData.subscription?.planId);
       if (plan) {
         setPlanName(plan.name);
+        setPlanDetails(plan);
       }
+    } else {
+      setPlanName('Nenhum');
+      setPlanDetails(null);
     }
   }, [userData]);
 
@@ -108,7 +161,12 @@ const UserAccountSection = () => {
                 <Check className="w-3 h-3 mr-1" />
                 Plano {planName} ativo
               </span>
-            ) : null}
+            ) : (
+              <span className="inline-flex items-center text-sm mt-2 bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">
+                <Shield className="w-3 h-3 mr-1" />
+                Nenhuma assinatura ativa
+              </span>
+            )}
           </div>
         </div>
         <button
@@ -150,17 +208,48 @@ const UserAccountSection = () => {
             </div>
           )}
           
-          {userData.subscription && userData.subscription.status === 'ativo' && (
-            <div className="space-y-2">
-              <div className="flex items-center text-foreground-light">
-                <CreditCard className="w-4 h-4 mr-2" />
-                <span className="text-sm">Assinatura</span>
-              </div>
-              <p className="font-medium">
-                Plano {planName} · Válido até {formatDate(userData.subscription.endDate)}
-              </p>
+          <div className="space-y-2">
+            <div className="flex items-center text-foreground-light">
+              <CreditCard className="w-4 h-4 mr-2" />
+              <span className="text-sm">Assinatura</span>
             </div>
-          )}
+            {userData.subscription && userData.subscription.status === 'ativo' ? (
+              <div className="bg-green-50 border border-green-100 p-3 rounded-lg">
+                <p className="font-medium text-green-700">
+                  Plano {planName} · Válido até {formatDate(userData.subscription.endDate)}
+                </p>
+                
+                {planDetails && (
+                  <div className="mt-2">
+                    <ul className="text-sm space-y-1 text-green-800">
+                      {planDetails.features.map((feature, index) => (
+                        <li key={index} className="flex items-start">
+                          <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-gray-100 p-3 rounded-lg">
+                <p className="font-medium text-gray-700">
+                  Nenhuma assinatura ativa
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Assine um plano para aproveitar os benefícios.
+                </p>
+                <Link 
+                  to="/manage-subscription"
+                  className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors mt-2"
+                >
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  Ver planos disponíveis
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
         
         <div>
