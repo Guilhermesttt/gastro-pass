@@ -19,8 +19,10 @@ const Login = () => {
       try {
         const user = JSON.parse(userData);
         if (user.isAdmin) {
+          // Admin users should only go to admin panel
           navigate('/admin');
         } else {
+          // Regular users go to dashboard
           navigate('/dashboard');
         }
         return;

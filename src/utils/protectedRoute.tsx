@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
@@ -8,6 +9,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,15 +21,19 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           const user = JSON.parse(userString);
           if (user && user.id) {
             setIsAuthenticated(true);
+            setIsAdmin(user.isAdmin === true);
           } else {
             setIsAuthenticated(false);
+            setIsAdmin(false);
           }
         } catch (error) {
           console.error('Erro ao verificar autenticação:', error);
           setIsAuthenticated(false);
+          setIsAdmin(false);
         }
       } else {
         setIsAuthenticated(false);
+        setIsAdmin(false);
       }
       setLoading(false);
     };
@@ -48,8 +54,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // Redirecionar para login com o state contendo a localização original
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+  
+  // Se for um administrador, redirecionar para o painel admin
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   return <>{children}</>;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;

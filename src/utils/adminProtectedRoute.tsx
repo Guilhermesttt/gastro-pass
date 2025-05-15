@@ -1,3 +1,4 @@
+
 import { useState, useEffect, ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
@@ -45,11 +46,11 @@ const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
   }
 
   if (!isAdmin) {
-    // Redirecionar para dashboard se logado mas não for admin
-    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+    // Redirecionar para login se não for admin
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
 };
 
-export default AdminProtectedRoute; 
+export default AdminProtectedRoute;
