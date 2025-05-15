@@ -1,13 +1,20 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { User, LogOut, CreditCard, Calendar, Lock, Mail } from 'lucide-react';
+import { User, LogOut, CreditCard, Calendar, Lock, Mail, Check } from 'lucide-react';
 
 interface UserData {
   id: string;
   name: string;
   email: string;
   createdAt?: string;
+  subscription?: {
+    planId: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+  };
 }
 
 const UserAccountSection = () => {
@@ -25,6 +32,19 @@ const UserAccountSection = () => {
     }
     return null;
   });
+  
+  const [planName, setPlanName] = useState<string>('Nenhum');
+  
+  useEffect(() => {
+    // Se o usuário tem uma assinatura ativa, buscar o nome do plano
+    if (userData?.subscription?.planId && userData.subscription.status === 'ativo') {
+      const plans = JSON.parse(localStorage.getItem('plans') || '[]');
+      const plan = plans.find((p: any) => p.id === userData.subscription?.planId);
+      if (plan) {
+        setPlanName(plan.name);
+      }
+    }
+  }, [userData]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -35,6 +55,28 @@ const UserAccountSection = () => {
       year: 'numeric'
     }).format(date);
   };
+  
+  // Verificar se há mudanças no localStorage (para identificar aprovações de pagamento)
+  useEffect(() => {
+    const checkUserChanges = () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (JSON.stringify(parsedUser) !== JSON.stringify(userData)) {
+            setUserData(parsedUser);
+          }
+        } catch (error) {
+          console.error('Erro ao analisar dados do usuário:', error);
+        }
+      }
+    };
+    
+    // Verificar a cada 5 segundos
+    const interval = setInterval(checkUserChanges, 5000);
+    
+    return () => clearInterval(interval);
+  }, [userData]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -60,6 +102,13 @@ const UserAccountSection = () => {
           <div>
             <h2 className="text-xl font-semibold">{userData.name}</h2>
             <p className="text-foreground-light">{userData.email}</p>
+            
+            {userData.subscription && userData.subscription.status === 'ativo' ? (
+              <span className="inline-flex items-center text-sm mt-2 bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                <Check className="w-3 h-3 mr-1" />
+                Plano {planName} ativo
+              </span>
+            ) : null}
           </div>
         </div>
         <button
@@ -100,6 +149,18 @@ const UserAccountSection = () => {
               <p className="font-medium">{formatDate(userData.createdAt)}</p>
             </div>
           )}
+          
+          {userData.subscription && userData.subscription.status === 'ativo' && (
+            <div className="space-y-2">
+              <div className="flex items-center text-foreground-light">
+                <CreditCard className="w-4 h-4 mr-2" />
+                <span className="text-sm">Assinatura</span>
+              </div>
+              <p className="font-medium">
+                Plano {planName} · Válido até {formatDate(userData.subscription.endDate)}
+              </p>
+            </div>
+          )}
         </div>
         
         <div>
@@ -127,4 +188,4 @@ const UserAccountSection = () => {
   );
 };
 
-export default UserAccountSection; 
+export default UserAccountSection;

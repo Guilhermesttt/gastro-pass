@@ -59,11 +59,10 @@ export function AdminPayments() {
       
       // Simulate loading delay for payments data
       setTimeout(() => {
-        // Simular carregamento de pagamentos
-        const mockPayments: Payment[] = [];
-
-        setPayments(mockPayments);
-        updateFilteredPayments(mockPayments, statusFilter);
+        // Carregar pagamentos do localStorage
+        const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+        setPayments(allPayments);
+        updateFilteredPayments(allPayments, statusFilter);
         setIsLoading(false);
       }, 800);
       
@@ -103,13 +102,62 @@ export function AdminPayments() {
       
       // Simulate processing delay
       setTimeout(() => {
+        // 1. Atualizar o status do pagamento para 'pago'
         let updatedPayments = payments.map(payment => 
           payment.id === currentPayment.id 
             ? { ...payment, status: 'pago' as const }
             : payment
         );
         setPayments(updatedPayments);
+        localStorage.setItem('payments', JSON.stringify(updatedPayments));
         updateFilteredPayments(updatedPayments, statusFilter);
+        
+        // 2. Atualizar a assinatura do usuário
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const user = users.find((u: any) => u.id === currentPayment.userId);
+        
+        if (user) {
+          // Encontrar os detalhes do plano
+          const plans = JSON.parse(localStorage.getItem('plans') || '[]');
+          const plan = plans.find((p: any) => p.id === currentPayment.planId);
+          
+          if (plan) {
+            // Criar data de início (hoje) e data de fim (1 mês a partir de hoje)
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + 1);
+            
+            // Atualizar usuário com assinatura ativa
+            const updatedUser = {
+              ...user,
+              subscription: {
+                planId: plan.id,
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
+                status: 'ativo'
+              },
+              paymentPending: null
+            };
+            
+            // Atualizar o usuário na lista
+            const updatedUsers = users.map((u: any) => 
+              u.id === updatedUser.id ? updatedUser : u
+            );
+            
+            // Salvar no localStorage
+            localStorage.setItem('users', JSON.stringify(updatedUsers));
+            
+            // Se o usuário estiver logado e for este usuário, atualizar também seu objeto no localStorage
+            const currentUserStr = localStorage.getItem('user');
+            if (currentUserStr) {
+              const currentUser = JSON.parse(currentUserStr);
+              if (currentUser.id === updatedUser.id) {
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+              }
+            }
+          }
+        }
+        
         setIsApproveDialogOpen(false);
         setIsActionLoading(false);
         
@@ -127,13 +175,44 @@ export function AdminPayments() {
       
       // Simulate processing delay
       setTimeout(() => {
+        // 1. Atualizar o status do pagamento para 'cancelado'
         let updatedPayments = payments.map(payment => 
           payment.id === currentPayment.id 
             ? { ...payment, status: 'cancelado' as const }
             : payment
         );
         setPayments(updatedPayments);
+        localStorage.setItem('payments', JSON.stringify(updatedPayments));
         updateFilteredPayments(updatedPayments, statusFilter);
+        
+        // 2. Remover o pagamento pendente do usuário
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const user = users.find((u: any) => u.id === currentPayment.userId);
+        
+        if (user && user.paymentPending && user.paymentPending.paymentId === currentPayment.id) {
+          const updatedUser = {
+            ...user,
+            paymentPending: null
+          };
+          
+          // Atualizar o usuário na lista
+          const updatedUsers = users.map((u: any) => 
+            u.id === updatedUser.id ? updatedUser : u
+          );
+          
+          // Salvar no localStorage
+          localStorage.setItem('users', JSON.stringify(updatedUsers));
+          
+          // Se o usuário estiver logado e for este usuário, atualizar também seu objeto no localStorage
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            if (currentUser.id === updatedUser.id) {
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+            }
+          }
+        }
+        
         setIsRejectDialogOpen(false);
         setIsActionLoading(false);
         

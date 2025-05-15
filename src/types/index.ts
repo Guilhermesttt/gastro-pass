@@ -5,6 +5,16 @@ export interface User {
   email: string;
   isAdmin?: boolean;
   location?: string;
+  subscription?: {
+    planId: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+  };
+  paymentPending?: {
+    paymentId: string;
+    planId: string;
+  };
 }
 
 export interface Payment {
@@ -13,6 +23,8 @@ export interface Payment {
   amount: number;
   date: string;
   status: 'pendente' | 'pago' | 'cancelado';
+  userId: string;
+  planId: string;
 }
 
 export interface UserAuth {

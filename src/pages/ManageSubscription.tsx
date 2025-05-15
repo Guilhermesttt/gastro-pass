@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ArrowLeft, CreditCard, Check, Calendar, Shield, Loader2, RefreshCw } from 'lucide-react';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 interface Plan {
   id: string;
@@ -44,6 +46,7 @@ const ManageSubscription = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Planos disponíveis
   const plans: Plan[] = [
@@ -88,17 +91,21 @@ const ManageSubscription = () => {
   useEffect(() => {
     if (user) {
       // Carregar pagamentos do usuário
-      const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
-      const userPayments = allPayments.filter((payment: Payment) => payment.userId === user.id);
-      setPayments(userPayments);
-      
-      // Verificar plano atual
-      if (user.subscription) {
-        setCurrentPlan(plans.find(p => p.id === user.subscription.planId));
-        setSelectedPlan(user.subscription.planId);
-      } else {
-        setSelectedPlan('basic');
-      }
+      setTimeout(() => {
+        const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+        const userPayments = allPayments.filter((payment: Payment) => payment.userId === user.id);
+        setPayments(userPayments);
+        
+        // Verificar plano atual
+        if (user.subscription) {
+          setCurrentPlan(plans.find(p => p.id === user.subscription.planId));
+          setSelectedPlan(user.subscription.planId);
+        } else {
+          setSelectedPlan('basic');
+        }
+        
+        setIsLoading(false);
+      }, 500);
     }
   }, [user]);
   
@@ -172,49 +179,51 @@ const ManageSubscription = () => {
     
     // Simulação de verificação de status
     setTimeout(() => {
-      // Verificar se existe pagamento pendente aprovado pelo admin
-      const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
-      const pendingPayment = user.paymentPending ? allPayments.find((p: Payment) => p.id === user.paymentPending.paymentId) : null;
-      
-      if (pendingPayment && pendingPayment.status === 'pago') {
-        // Atualizar usuário com assinatura ativa
-        const updatedUser = {
-          ...user,
-          subscription: {
-            planId: pendingPayment.planId,
-            startDate: new Date().toISOString(),
-            endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-            status: 'ativo'
-          },
-          paymentPending: null
-        };
+      // Atualizar usuário do localStorage para garantir que temos dados atualizados
+      const currentUserStr = localStorage.getItem('user');
+      if (currentUserStr) {
+        const currentUser = JSON.parse(currentUserStr);
+        setUser(currentUser);
         
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        // Verificar se existe pagamento pendente aprovado pelo admin
+        const allPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+        const pendingPayment = currentUser.paymentPending 
+          ? allPayments.find((p: Payment) => p.id === currentUser.paymentPending.paymentId) 
+          : null;
         
-        const planName = plans.find(p => p.id === pendingPayment.planId)?.name;
-        
-        toast({
-          title: 'Pagamento confirmado!',
-          description: `Seu plano ${planName} foi ativado com sucesso.`,
-        });
+        if (pendingPayment && pendingPayment.status === 'pago') {
+          // Buscar plano atual
+          const plan = plans.find(p => p.id === pendingPayment.planId);
+          setCurrentPlan(plan);
+          
+          toast({
+            title: 'Pagamento confirmado!',
+            description: `Seu plano ${plan?.name} foi ativado com sucesso.`,
+          });
+        } else if (pendingPayment) {
+          toast({
+            title: 'Pagamento pendente',
+            description: 'Seu pagamento ainda está sendo processado. Tente novamente mais tarde.',
+          });
+        } else if (currentUser.subscription && currentUser.subscription.status === 'ativo') {
+          // Se tiver uma assinatura ativa
+          const plan = plans.find(p => p.id === currentUser.subscription.planId);
+          setCurrentPlan(plan);
+          
+          toast({
+            title: 'Assinatura ativa',
+            description: `Seu plano ${plan?.name} está ativo.`,
+          });
+        } else {
+          toast({
+            title: 'Nenhum pagamento pendente',
+            description: 'Você não tem pagamentos pendentes para verificar.',
+          });
+        }
         
         // Recarregar pagamentos
-        const userPayments = allPayments.filter((payment: Payment) => payment.userId === user.id);
+        const userPayments = allPayments.filter((payment: Payment) => payment.userId === currentUser.id);
         setPayments(userPayments);
-        
-        // Atualizar plano atual
-        setCurrentPlan(plans.find(p => p.id === pendingPayment.planId));
-      } else if (pendingPayment) {
-        toast({
-          title: 'Pagamento pendente',
-          description: 'Seu pagamento ainda está sendo processado. Tente novamente mais tarde.',
-        });
-      } else {
-        toast({
-          title: 'Nenhum pagamento pendente',
-          description: 'Você não tem pagamentos pendentes para verificar.',
-        });
       }
       
       setIsCheckingStatus(false);
@@ -226,12 +235,31 @@ const ManageSubscription = () => {
     return null;
   }
   
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
+          <LoadingScreen text="Carregando assinatura..." />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
   // Determinar o status da assinatura para exibição
-  const subscriptionStatus = user.subscription 
+  const subscriptionStatus = user.subscription && user.subscription.status === 'ativo'
     ? { status: 'ativo', planName: plans.find(p => p.id === user.subscription.planId)?.name || 'Básico' }
     : (user.paymentPending 
       ? { status: 'pendente', planName: plans.find(p => p.id === user.paymentPending.planId)?.name || 'Básico' }
       : { status: 'inativo', planName: 'Nenhum' });
+  
+  // Formatar data de expiração da assinatura
+  const formatSubscriptionDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -264,25 +292,23 @@ const ManageSubscription = () => {
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-2">
                   <h2 className="text-lg font-medium">Status da sua assinatura</h2>
-                  {user.paymentPending && (
-                    <button 
-                      onClick={checkPaymentStatus}
-                      className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
-                      disabled={isCheckingStatus}
-                    >
-                      {isCheckingStatus ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                          <span>Verificando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-1" />
-                          <span>Verificar status</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <button 
+                    onClick={checkPaymentStatus}
+                    className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
+                    disabled={isCheckingStatus}
+                  >
+                    {isCheckingStatus ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        <span>Verificando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-1" />
+                        <span>Verificar status</span>
+                      </>
+                    )}
+                  </button>
                 </div>
                 <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg">
                   <div className="flex items-start gap-4">
@@ -313,9 +339,9 @@ const ManageSubscription = () => {
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
                         {subscriptionStatus.status === 'ativo' ? (
-                          'Ativo até 15/12/2023 · Renovação automática'
+                          `Ativo até ${formatSubscriptionDate(user.subscription?.endDate)} · Renovação automática`
                         ) : subscriptionStatus.status === 'pendente' ? (
-                          'Pagamento pendente · Aguardando confirmação'
+                          'Pagamento pendente · Aguardando aprovação'
                         ) : (
                           'Nenhuma assinatura ativa'
                         )}
@@ -333,6 +359,8 @@ const ManageSubscription = () => {
                     key={plan.id}
                     className={`border rounded-lg p-5 cursor-pointer transition-all hover:shadow-md ${
                       selectedPlan === plan.id ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'
+                    } ${
+                      user.subscription?.planId === plan.id && user.subscription?.status === 'ativo' ? 'border-green-500 border-2' : ''
                     }`}
                     onClick={() => handlePlanSelect(plan.id)}
                   >
@@ -344,6 +372,12 @@ const ManageSubscription = () => {
                         {selectedPlan === plan.id && <Check className="w-3 h-3" />}
                       </div>
                     </div>
+                    
+                    {user.subscription?.planId === plan.id && user.subscription?.status === 'ativo' && (
+                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-2">
+                        Plano Atual
+                      </span>
+                    )}
                     
                     <p className="text-sm text-gray-600 mb-4">{plan.description}</p>
                     
@@ -373,9 +407,13 @@ const ManageSubscription = () => {
                   <button
                     onClick={handleSubscribe}
                     className="btn btn-primary"
-                    disabled={isCheckingStatus || (user.paymentPending && selectedPlan === user.paymentPending.planId)}
+                    disabled={isCheckingStatus || 
+                      (user.paymentPending && selectedPlan === user.paymentPending.planId) ||
+                      (user.subscription?.status === 'ativo' && selectedPlan === user.subscription.planId)}
                   >
-                    {user.paymentPending && selectedPlan === user.paymentPending.planId ? 
+                    {user.subscription?.status === 'ativo' && selectedPlan === user.subscription.planId ? 
+                      'Plano Ativo' : 
+                      user.paymentPending && selectedPlan === user.paymentPending.planId ? 
                       'Pagamento pendente' : 'Pagar via WhatsApp'}
                   </button>
                 </div>
@@ -450,4 +488,4 @@ const ManageSubscription = () => {
   );
 };
 
-export default ManageSubscription; 
+export default ManageSubscription;
