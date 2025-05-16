@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -31,45 +32,13 @@ import {
   Upload,
   RefreshCw,
   QrCode,
-  X
+  X,
+  Link
 } from 'lucide-react';
 import { getMockRestaurants, Restaurant } from '@/data/mockData';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRCodeSVG } from 'qrcode.react';
-
-// Opções de horários pré-definidas
-const timeSlots = {
-  morning: [
-    { id: "morning-1", label: "07:00 - 12:00", value: "07:00 - 12:00" },
-    { id: "morning-2", label: "08:00 - 12:00", value: "08:00 - 12:00" },
-    { id: "morning-3", label: "09:00 - 12:00", value: "09:00 - 12:00" },
-    { id: "morning-4", label: "10:00 - 14:00", value: "10:00 - 14:00" },
-  ],
-  afternoon: [
-    { id: "afternoon-1", label: "12:00 - 15:00", value: "12:00 - 15:00" },
-    { id: "afternoon-2", label: "12:00 - 16:00", value: "12:00 - 16:00" },
-    { id: "afternoon-3", label: "12:00 - 18:00", value: "12:00 - 18:00" },
-  ],
-  night: [
-    { id: "night-1", label: "18:00 - 22:00", value: "18:00 - 22:00" },
-    { id: "night-2", label: "18:00 - 23:00", value: "18:00 - 23:00" },
-    { id: "night-3", label: "19:00 - 23:00", value: "19:00 - 23:00" },
-  ],
-  fullDay: [
-    { id: "full-1", label: "10:00 - 22:00", value: "10:00 - 22:00" },
-    { id: "full-2", label: "11:00 - 23:00", value: "11:00 - 23:00" },
-    { id: "full-3", label: "24 horas", value: "24 horas" },
-  ]
-};
 
 // Imagem padrão para restaurantes sem imagem
 const defaultImage = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80";
@@ -126,16 +95,13 @@ const AdminRestaurants = () => {
     discount: '',
     description: '',
     image: defaultImage,
-    estado: '', // Novo campo para o estado
-    qrCode: '' // Campo para armazenar o QR code
+    estado: '',
+    qrCode: '',
+    qrCodeLink: '' // Novo campo para o link do QR code
   });
   
   // Estado para o filtro de estados
   const [filterEstado, setFilterEstado] = useState<string>('');
-  
-  // Estado para controle do tipo de horário selecionado
-  const [selectedTimeSlotType, setSelectedTimeSlotType] = useState<string>("fullDay");
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>(timeSlots.fullDay[0].value);
   
   // Estados para o upload de imagem
   const [isUploading, setIsUploading] = useState(false);
@@ -204,27 +170,6 @@ const AdminRestaurants = () => {
     });
   };
 
-  // Handler para alterações no horário
-  const handleTimeSlotChange = (value: string) => {
-    setSelectedTimeSlot(value);
-    setFormData({
-      ...formData,
-      hours: value
-    });
-  };
-
-  // Handler para alterações no tipo de horário (manhã, tarde, etc)
-  const handleTimeSlotTypeChange = (value: string) => {
-    setSelectedTimeSlotType(value);
-    // Selecionar o primeiro slot do novo tipo
-    const firstSlot = timeSlots[value as keyof typeof timeSlots][0].value;
-    setSelectedTimeSlot(firstSlot);
-    setFormData({
-      ...formData,
-      hours: firstSlot
-    });
-  };
-
   // Função para processar o upload de imagem
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -288,6 +233,33 @@ const AdminRestaurants = () => {
     fileInputRef.current?.click();
   };
 
+  // Função para gerar QR Code a partir do link
+  const generateQrCode = () => {
+    const link = formData.qrCodeLink.trim();
+    
+    if (!link) {
+      toast({
+        variant: 'destructive',
+        title: 'Link não fornecido',
+        description: 'Por favor, insira um link válido para gerar o QR Code.',
+      });
+      return;
+    }
+    
+    // Usar o link como valor do QR Code ou um formato JSON se preferir
+    setFormData({
+      ...formData,
+      qrCode: link
+    });
+    
+    toast({
+      title: 'QR Code gerado',
+      description: 'O QR Code foi gerado com sucesso.',
+    });
+    
+    setShowQRCode(true);
+  };
+
   const handleOpenForm = (restaurant?: Restaurant) => {
     if (restaurant) {
       setFormData({
@@ -297,34 +269,18 @@ const AdminRestaurants = () => {
         location: restaurant.location,
         address: restaurant.address || '',
         phone: restaurant.phone || '',
-        hours: restaurant.hours || timeSlots.fullDay[0].value,
+        hours: restaurant.hours || '',
         rating: restaurant.rating,
         discount: restaurant.discount,
         description: restaurant.description || '',
         image: restaurant.image,
-        estado: restaurant.estado || '', // Recuperar o estado do restaurante
-        qrCode: restaurant.qrCode || '' // Recuperar o QR code do restaurante
+        estado: restaurant.estado || '',
+        qrCode: restaurant.qrCode || '',
+        qrCodeLink: restaurant.qrCode || '' // Usar o QR code existente como link inicial
       });
       
       // Definir visualização da imagem
       setImagePreview(restaurant.image);
-      
-      // Detectar qual tipo de horário está selecionado
-      let foundTimeSlotType = false;
-      Object.entries(timeSlots).forEach(([type, slots]) => {
-        const matchingSlot = slots.find(slot => slot.value === restaurant.hours);
-        if (matchingSlot) {
-          setSelectedTimeSlotType(type);
-          setSelectedTimeSlot(matchingSlot.value);
-          foundTimeSlotType = true;
-        }
-      });
-      
-      // Se não encontrar correspondência, usar o valor padrão
-      if (!foundTimeSlotType) {
-        setSelectedTimeSlotType("fullDay");
-        setSelectedTimeSlot(timeSlots.fullDay[0].value);
-      }
       
       setCurrentRestaurant(restaurant);
       setShowQRCode(!!restaurant.qrCode);
@@ -337,17 +293,16 @@ const AdminRestaurants = () => {
         location: '',
         address: '',
         phone: '',
-        hours: timeSlots.fullDay[0].value,
+        hours: '',
         rating: 4.5,
         discount: '',
         description: '',
         image: defaultImage,
-        estado: '', // Estado vazio para novo restaurante
-        qrCode: '' // QR code vazio para novo restaurante
+        estado: '',
+        qrCode: '',
+        qrCodeLink: ''
       });
       setImagePreview(defaultImage);
-      setSelectedTimeSlotType("fullDay");
-      setSelectedTimeSlot(timeSlots.fullDay[0].value);
       setCurrentRestaurant(null);
       setShowQRCode(false);
     }
@@ -368,18 +323,16 @@ const AdminRestaurants = () => {
       return;
     }
 
-    // Gerar o QR code como uma string de dados
-    const qrCodeData = JSON.stringify({
-      id: formData.id,
-      name: formData.name,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Atualizar o formData com o QR code gerado
-    const updatedFormData = {
-      ...formData,
-      qrCode: qrCodeData
-    };
+    // Se o link do QR code estiver preenchido mas o QR code não foi gerado
+    if (formData.qrCodeLink && !formData.qrCode) {
+      setFormData({
+        ...formData,
+        qrCode: formData.qrCodeLink
+      });
+    }
+
+    let updatedFormData = { ...formData };
+    delete (updatedFormData as any).qrCodeLink; // Remover campo temporário
 
     let updatedRestaurants: Restaurant[];
     
@@ -406,10 +359,8 @@ const AdminRestaurants = () => {
     setRestaurants(updatedRestaurants);
     localStorage.setItem('restaurants', JSON.stringify(updatedRestaurants));
     
-    // Mostrar o QR code após salvar
-    setCurrentRestaurant(updatedFormData as Restaurant);
-    setFormData(updatedFormData);
-    setShowQRCode(true);
+    // Fechar o formulário
+    setIsFormOpen(false);
   };
 
   const handleConfirmDelete = () => {
@@ -747,44 +698,56 @@ const AdminRestaurants = () => {
                   </div>
                 </div>
 
-                {/* Horário de Funcionamento com opções pré-definidas */}
-                <div className="space-y-3">
+                {/* Horário de Funcionamento como texto livre */}
+                <div className="space-y-1">
                   <div className="flex items-center">
                     <Clock size={18} className="mr-2 text-primary" />
-                    <label className="text-sm font-medium text-foreground">
+                    <label htmlFor="hours" className="text-sm font-medium text-foreground">
                       Horário de Funcionamento
                     </label>
                   </div>
-                  
-                  <Tabs 
-                    value={selectedTimeSlotType} 
-                    onValueChange={handleTimeSlotTypeChange}
-                    className="w-full"
-                  >
-                    <TabsList className="grid grid-cols-4 mb-4">
-                      <TabsTrigger value="morning">Manhã</TabsTrigger>
-                      <TabsTrigger value="afternoon">Tarde</TabsTrigger>
-                      <TabsTrigger value="night">Noite</TabsTrigger>
-                      <TabsTrigger value="fullDay">Dia Todo</TabsTrigger>
-                    </TabsList>
-                    
-                    {Object.entries(timeSlots).map(([type, slots]) => (
-                      <TabsContent key={type} value={type} className="mt-0">
-                        <RadioGroup 
-                          value={selectedTimeSlot}
-                          onValueChange={handleTimeSlotChange}
-                          className="grid grid-cols-2 gap-4"
-                        >
-                          {slots.map((slot) => (
-                            <div key={slot.id} className="flex items-center space-x-2">
-                              <RadioGroupItem value={slot.value} id={slot.id} />
-                              <Label htmlFor={slot.id}>{slot.label}</Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </TabsContent>
-                    ))}
-                  </Tabs>
+                  <Input
+                    id="hours"
+                    name="hours"
+                    value={formData.hours}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Segunda a Sexta: 09:00 - 18:00, Sábados: 10:00 - 15:00"
+                    className="bg-card"
+                  />
+                </div>
+
+                {/* Campo para link do QR Code */}
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <Link size={18} className="mr-2 text-primary" />
+                    <label htmlFor="qrCodeLink" className="text-sm font-medium text-foreground">
+                      Link para QR Code
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      id="qrCodeLink"
+                      name="qrCodeLink"
+                      value={formData.qrCodeLink}
+                      onChange={handleInputChange}
+                      placeholder="Ex: https://seusite.com/restaurante"
+                      className="bg-card flex-grow"
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={generateQrCode}
+                      variant="outline"
+                      className="whitespace-nowrap"
+                    >
+                      <QrCode size={16} className="mr-2" />
+                      Gerar QR Code
+                    </Button>
+                  </div>
+                  {formData.qrCode && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded-md text-sm text-muted-foreground">
+                      QR Code gerado com sucesso! O QR Code será exibido no card do restaurante.
+                    </div>
+                  )}
                 </div>
 
                 {/* Avaliação */}
@@ -917,8 +880,8 @@ const AdminRestaurants = () => {
                 </div>
                 
                 <p className="text-center text-sm text-muted-foreground mb-4">
-                  Este QR code contém informações como ID e nome do restaurante.<br />
-                  Pode ser usado para identificação do restaurante no sistema.
+                  Este QR code contém o link para: <br />
+                  <span className="font-medium break-all">{qrCodeRestaurant.qrCode}</span>
                 </p>
               </div>
               

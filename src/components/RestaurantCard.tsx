@@ -1,3 +1,4 @@
+
 import { MapPin, Star, QrCode } from "lucide-react";
 import { motion } from "framer-motion";
 
