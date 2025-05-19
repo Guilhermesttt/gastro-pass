@@ -5,6 +5,12 @@ export interface User {
   email: string;
   isAdmin?: boolean;
   location?: string;
+  estado?: string;
+  phone?: string;
+  cpf?: string;
+  city?: string;
+  profession?: string;
+  birthday?: string;
   subscription?: {
     planId: string;
     startDate: string;

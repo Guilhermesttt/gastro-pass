@@ -22,8 +22,8 @@ const Register = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-60' : 'pt-60'} pb-12 sm:pb-20 bg-gray-50`}>
-        <div className="container max-w-lg mx-auto px-4">
+      <main className={`flex-grow flex items-center justify-center ${isMobile ? 'pt-20' : 'pt-20'} pb-12 sm:pb-20 bg-gray-50`}>
+        <div className="container max-w-2xl mx-auto px-4">
           <div className="bg-white shadow-md rounded-lg overflow-hidden my-4 sm:my-8">
             <RegisterForm />
           </div>

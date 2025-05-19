@@ -1,7 +1,12 @@
+
 import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Phone, Calendar, MapPin, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
 
 // Lista de estados brasileiros
 const estadosBrasileiros = [
@@ -34,12 +39,36 @@ const estadosBrasileiros = [
   { value: 'TO', label: 'Tocantins' }
 ];
 
+// Formatar o CPF
+const formatCPF = (cpf: string) => {
+  return cpf
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+    .slice(0, 14);
+};
+
+// Formatar o telefone
+const formatPhone = (phone: string) => {
+  return phone
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .slice(0, 15);
+};
+
 const RegisterForm = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [estado, setEstado] = useState('');
+  const [phone, setPhone] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [city, setCity] = useState('');
+  const [profession, setProfession] = useState('');
+  const [birthday, setBirthday] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -47,6 +76,11 @@ const RegisterForm = () => {
     password?: string;
     confirmPassword?: string;
     estado?: string;
+    phone?: string;
+    cpf?: string;
+    city?: string;
+    profession?: string;
+    birthday?: string;
     general?: string;
   }>({});
 
@@ -77,6 +111,14 @@ const RegisterForm = () => {
     }
   }, []);
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhone(e.target.value));
+  };
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCpf(formatCPF(e.target.value));
+  };
+
   const validateForm = () => {
     const newErrors: {
       name?: string;
@@ -84,6 +126,9 @@ const RegisterForm = () => {
       password?: string;
       confirmPassword?: string;
       estado?: string;
+      phone?: string;
+      cpf?: string;
+      general?: string;
     } = {};
 
     // Name validation
@@ -124,6 +169,18 @@ const RegisterForm = () => {
       newErrors.estado = 'Selecione seu estado';
     }
 
+    // Phone validation (REQUIRED)
+    if (!phone) {
+      newErrors.phone = 'O telefone é obrigatório';
+    } else if (phone.replace(/\D/g, '').length < 11) {
+      newErrors.phone = 'Telefone inválido';
+    }
+
+    // CPF validation (optional but validate if provided)
+    if (cpf && cpf.replace(/\D/g, '').length !== 11) {
+      newErrors.cpf = 'CPF inválido';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -148,6 +205,11 @@ const RegisterForm = () => {
         email,
         password,
         estado,
+        phone,
+        cpf: cpf || '',
+        city: city || '',
+        profession: profession || '',
+        birthday: birthday || '',
         createdAt: new Date().toISOString(),
         isAdmin: false,
       };
@@ -163,6 +225,11 @@ const RegisterForm = () => {
         name: newUser.name,
         email: newUser.email,
         estado: newUser.estado,
+        phone: newUser.phone,
+        cpf: newUser.cpf,
+        city: newUser.city,
+        profession: newUser.profession,
+        birthday: newUser.birthday,
         createdAt: newUser.createdAt,
         isAdmin: false,
       }));
@@ -194,6 +261,7 @@ const RegisterForm = () => {
       )}
 
       <form onSubmit={handleSubmit} noValidate>
+        {/* Nome completo */}
         <div className="mb-4">
           <label htmlFor="name" className="block text-sm font-medium text-text-dark mb-1">
             Nome completo
@@ -213,6 +281,7 @@ const RegisterForm = () => {
           )}
         </div>
 
+        {/* Email */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium text-text-dark mb-1">
             E-mail
@@ -232,9 +301,50 @@ const RegisterForm = () => {
           )}
         </div>
 
+        {/* Telefone (REQUIRED) */}
         <div className="mb-4">
-          <label htmlFor="estado" className="block text-sm font-medium text-text-dark mb-1">
-            Estado
+          <label htmlFor="phone" className="flex items-center text-sm font-medium text-text-dark mb-1">
+            <Phone size={16} className="mr-1" /> Telefone <span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            value={phone}
+            onChange={handlePhoneChange}
+            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+              errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="(00) 00000-0000"
+          />
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+          )}
+        </div>
+
+        {/* CPF (optional) */}
+        <div className="mb-4">
+          <label htmlFor="cpf" className="block text-sm font-medium text-text-dark mb-1">
+            CPF (opcional)
+          </label>
+          <input
+            type="text"
+            id="cpf"
+            value={cpf}
+            onChange={handleCPFChange}
+            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+              errors.cpf ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="000.000.000-00"
+          />
+          {errors.cpf && (
+            <p className="text-red-500 text-xs mt-1">{errors.cpf}</p>
+          )}
+        </div>
+
+        {/* Estado */}
+        <div className="mb-4">
+          <label htmlFor="estado" className="flex items-center text-sm font-medium text-text-dark mb-1">
+            <MapPin size={16} className="mr-1" /> Estado
           </label>
           <select
             id="estado"
@@ -256,6 +366,51 @@ const RegisterForm = () => {
           )}
         </div>
 
+        {/* Cidade (optional) */}
+        <div className="mb-4">
+          <label htmlFor="city" className="block text-sm font-medium text-text-dark mb-1">
+            Cidade (opcional)
+          </label>
+          <input
+            type="text"
+            id="city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Sua cidade"
+          />
+        </div>
+
+        {/* Profissão (optional) */}
+        <div className="mb-4">
+          <label htmlFor="profession" className="flex items-center text-sm font-medium text-text-dark mb-1">
+            <User size={16} className="mr-1" /> Profissão (opcional)
+          </label>
+          <input
+            type="text"
+            id="profession"
+            value={profession}
+            onChange={(e) => setProfession(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Sua profissão"
+          />
+        </div>
+
+        {/* Aniversário (optional) */}
+        <div className="mb-4">
+          <label htmlFor="birthday" className="flex items-center text-sm font-medium text-text-dark mb-1">
+            <Calendar size={16} className="mr-1" /> Data de nascimento (opcional)
+          </label>
+          <input
+            type="date"
+            id="birthday"
+            value={birthday}
+            onChange={(e) => setBirthday(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        {/* Senha */}
         <div className="mb-4">
           <label htmlFor="password" className="block text-sm font-medium text-text-dark mb-1">
             Senha
@@ -275,6 +430,7 @@ const RegisterForm = () => {
           )}
         </div>
 
+        {/* Confirmar senha */}
         <div className="mb-6">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-dark mb-1">
             Confirmar senha
